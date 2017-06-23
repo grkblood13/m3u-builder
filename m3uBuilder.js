@@ -1,5 +1,6 @@
 var fs = require('fs');
 var http = require('http');
+var argv = require('./node_modules/minimist')(process.argv.slice(2));
 var xml2js = require('./node_modules/xml2js');
 var wget = require('./node_modules/wget-improved');
 var parser = new xml2js.Parser();
@@ -9,11 +10,12 @@ var params = require('./params.cfg');
 var epg = [];
 var m3u = [];
 var count = 0;
+var epgString = '';
 
 options = params.epg_input;
 options.method = 'GET';
-var epgString='';
-var req = http.request(options, function(res) {
+
+var downloadEPG = http.request(options, function(res) {
         res.setEncoding('utf8');
         res.on('data', function (chunk) {
                 epgString+=chunk;
@@ -23,7 +25,7 @@ var req = http.request(options, function(res) {
 		main();
         });
 });
-req.write('\n');
+downloadEPG.end();
 
 var downloadM3U = wget.download(params.m3u_input, params.m3u_output);
 downloadM3U.on('end', function() {
@@ -92,6 +94,24 @@ function buildM3u() {
 	streams = pairStreams();
 	sortedStreams = [];
 
+	// change group names
+	streams.forEach(function(ob,idx) {
+		if (params.changeGroupTo.hasOwnProperty(ob.group)) {
+			streams[idx].group = params.changeGroupTo[ob.group];
+        	}
+	});
+
+	// sort group ordered streams
+	params.groupOrder.forEach(function(group) {
+		streamGroup = [];
+		streams.forEach(function(ob) {
+	        	if (ob.group === group)  {
+	                	streamGroup.push(ob);
+	        	}
+		});
+		sortedStreams = sortedStreams.concat(streamGroup.sort(dynamicSort("name")));				
+	});
+
 	// sort group ordered streams
 	params.groupOrder.forEach(function(group) {
 		streamGroup = [];
@@ -143,19 +163,39 @@ function main() {
 			}
 		}
 
-		// import epg data and remove anything channels or groups omitted
-		parser.parseString(epgString, function (err, result) {
-			result.tv.channel.forEach(function(channel,idx) {
-				if (params.omitMatched.channels.indexOf(channel['display-name'][0]) > -1) {
-					delete result.tv.channel[idx];
-				}
-				epg.push({id:channel.$.id,name:channel['display-name'][0]});
+		// print channels (CLI option)
+		if (argv.hasOwnProperty('channels')) {
+			m3u.sort(dynamicSort("name")).forEach(function(ob) {
+				console.log(ob.name);
 			});
-			var xml = builder.buildObject(result);
-        		epgFile = fs.createWriteStream(params.epg_output);
-			epgFile.write(xml);
-			epgFile.end();
-			buildM3u();
-		});
+
+		// print groups (CLI option)
+		} else if (argv.hasOwnProperty('groups')) {
+			var groups = [];
+			m3u.sort(dynamicSort("group")).forEach(function(ob) {
+				if (groups.indexOf(ob.group) < 0) { groups.push(ob.group); }
+			});
+			groups.forEach(function(val) { console.log(val); });
+
+		// build files (core capability)
+		} else {
+			// import epg data and remove any channels or groups omitted
+			parser.parseString(epgString, function (err, result) {
+
+				result.tv.channel.forEach(function(channel,idx) {
+					// remove channel guide data for omitted channels
+					if (params.omitMatched.channels.indexOf(channel['display-name'][0]) > -1) {
+						delete result.tv.channel[idx];
+					}
+					epg.push({id:channel.$.id,name:channel['display-name'][0]});
+				});
+
+				var xml = builder.buildObject(result);
+				epgFile = fs.createWriteStream(params.epg_output);
+				epgFile.write(xml);
+				epgFile.end();
+				buildM3u();
+			});
+		}
 	}
 }

@@ -52,12 +52,24 @@ By default m3uBuilder omits channels without valid EPG data. How, you can add th
    $ node /opt/m3uBuilder/m3uBuilder.js
 
    NOTE: For windows you will need to launch the nodejs command prompt
-   
+
+## Command Line Options:
+
+--channels: Lists all channels in alphabetical order.
+
+--groups: Lists all groups in alphabetical order.
+
 ## Configuration Instructions:
 
 m3uBuilder/params.js is where all configuration for m3uBuilder is done.
 
 At a minimum you must have EPG and XMLTV sources. The following is a brief run down of your options.
+
+changeGroupTo [OBJ] - object of properties, which are old group names, and their associated string value, which is a new group name.
+
+New group names can be used multiple times in order to merge groups into one.
+
+  * { OLD_NAME_1 [STR]: 'NEW_NAME',  OLD_NAME_2 [STR]: 'NEW_NAME', ... }
 
 epg_input [OBJ] - URL to EPG source
 
@@ -67,13 +79,13 @@ epg_input [OBJ] - URL to EPG source
 
   * path [STR]: 'HOST_PATH'
 
-replaceWith [ARR] - pairs of matches made by regular expressions and what to replace them with. Each pair is it's own array.
-
- `['\\\(.*\\\)','']` - Removes anything within () along with parenthesis themselves.
-
- `['US[/CA]*: ','']` - Removes 'US:' and 'US/CA: '.
-
 groupOrder [ARR] - order in which channel groups should be displayed on EPG. All remaining groups will be but in alphabetical order.
+
+includeUnmatched [OBJ] - channels and groups that don't have any EPG data that you would still like to include in the final EPG.
+
+  * groups [ARR]: group names to include
+
+  * channels [ARR]: channel names to include
 
 omitMatched [OBJ] - channels and groups which should be omitted from EPG
 
@@ -81,8 +93,8 @@ omitMatched [OBJ] - channels and groups which should be omitted from EPG
 
   * channels [ARR]: channel names to omit`
 
-includeUnmatched [OBJ] - channels and groups that don't have any EPG data that you would still like to include in the final EPG.
+replaceWith [ARR] - pairs of matches made by regular expressions and what to replace them with. Each pair is it's own array.
 
-  * groups [ARR]: group names to include
+ `['\\\(.*\\\)','']` - Removes anything within () along with parenthesis themselves.
 
-  * channels [ARR]: channel names to include
+ `['US[/CA]*: ','']` - Removes 'US:' and 'US/CA: '.
