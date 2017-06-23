@@ -67,7 +67,7 @@ At a minimum you must have EPG and XMLTV sources. The following is a brief run d
 
 changeGroupTo [OBJ] - object of properties, which are old group names, and their associated string value, which is a new group name.
 
-New group names can be used multiple times in order to merge groups into one.
+  New group names can be used multiple times in order to merge groups into one.
 
   * { OLD_NAME_1 [STR]: 'NEW_NAME',  OLD_NAME_2 [STR]: 'NEW_NAME', ... }
 

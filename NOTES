@@ -1,2 +1,0 @@
-The following command will output a full channel listing from your m3u file.
-$ tail -n +2 resource/channels-1.m3u | while read i; do [[ `echo $i | cut -c1-4` != 'http' ]] && echo $i | sed 's/^.*tvg-name="\([^"]*\)".*/\1/'; done
