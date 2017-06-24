@@ -7,8 +7,8 @@ var parser = new xml2js.Parser();
 var builder = new xml2js.Builder();
 var params = require('./params.cfg');
 
-var epg = [];
 var m3u = [];
+var streams = [];
 var count = 0;
 var epgString = '';
 
@@ -62,55 +62,24 @@ function dynamicSortMultiple() {
 }
 
 function pairStreams() {
-	var streams = [];
-        m3ufile = fs.createWriteStream(params.output);
+	_streams = [];
         m3u.forEach(function(val,idx) {
-                var result = epg.filter(function(v) {
-                    return v.id === val.id;
-                })[0];
+		// change group name
+		if (params.changeGroupTo.hasOwnProperty(val.group)) val.group = params.changeGroupTo[val.group];
 
-		// epg data available for channel
-                if (typeof result != 'undefined') {
-                        if (params.omitMatched.groups.indexOf(val.group) == -1 && params.omitMatched.channels.indexOf(val.name) == -1) {
-                                params.replaceWith.forEach(function(pair) {
-                                        val.name = changeName(val.name,pair[0],pair[1]);
-                                })
-                                streams.push({id:val.id,name:val.name,logo:val.logo,url:val.url,group:val.group});
-                        }
-		// epg data not available for channel
-                } else {
-                        if (params.includeUnmatched.groups.indexOf(val.group) > -1 || params.includeUnmatched.channels.indexOf(val.name) > -1) {
-                                params.replaceWith.forEach(function(pair) {
-                                        val.name = changeName(val.name,pair[0],pair[1]);
-                                })
-                                streams.push({id:val.id,name:val.name,logo:val.logo,url:val.url,group:val.group});
-                        }
-                }
-        });
-	return streams;
+		// only keep wanted channels/groups
+                if (!(params.omitMatched.groups.indexOf(val.group) > -1 || params.omitMatched.channels.indexOf(val.name) > -1)) {
+
+			// change channel name
+			params.replaceWith.forEach(function(pair) { val.name = changeName(val.name,pair[0],pair[1]); })
+			_streams.push({id:val.id,name:val.name,logo:val.logo,url:val.url,group:val.group});
+		}
+	});
+	return _streams;
 }
 
-function buildM3u() {
-	streams = pairStreams();
+function buildM3uFile() {
 	sortedStreams = [];
-
-	// change group names
-	streams.forEach(function(ob,idx) {
-		if (params.changeGroupTo.hasOwnProperty(ob.group)) {
-			streams[idx].group = params.changeGroupTo[ob.group];
-        	}
-	});
-
-	// sort group ordered streams
-	params.groupOrder.forEach(function(group) {
-		streamGroup = [];
-		streams.forEach(function(ob) {
-	        	if (ob.group === group)  {
-	                	streamGroup.push(ob);
-	        	}
-		});
-		sortedStreams = sortedStreams.concat(streamGroup.sort(dynamicSort("name")));				
-	});
 
 	// sort group ordered streams
 	params.groupOrder.forEach(function(group) {
@@ -130,6 +99,7 @@ function buildM3u() {
 	streams = sortedStreams.concat(streams.sort(dynamicSortMultiple("group", "name")));
 
 	// write new m3u file
+        m3ufile = fs.createWriteStream(params.output);
 	m3ufile.once('open', function(fd) {
 		m3ufile.write("#EXTM3U\n");
 		streams.forEach(function(val,idx) {
@@ -179,22 +149,46 @@ function main() {
 
 		// build files (core capability)
 		} else {
-			// import epg data and remove any channels or groups omitted
+			streams = pairStreams();
+
+			// import epg data
 			parser.parseString(epgString, function (err, result) {
 
+				// clean up channel guide data
 				result.tv.channel.forEach(function(channel,idx) {
-					// remove channel guide data for omitted channels
-					if (params.omitMatched.channels.indexOf(channel['display-name'][0]) > -1) {
-						delete result.tv.channel[idx];
-					}
-					epg.push({id:channel.$.id,name:channel['display-name'][0]});
+					var _res = streams.filter(function(res) {
+						return res.id === channel.$.id;
+					})[0];
+
+					// no stream with channel id in final list
+					if (typeof _res == 'undefined') delete result.tv.channel[idx];
 				});
 
+				// clean up program guide data
+				result.tv.programme.forEach(function(programme,idx) {
+					var _res = streams.filter(function(res) {
+						return res.id === programme.$.channel;
+					})[0];
+
+					// no stream with channel id in final list
+					if (typeof _res == 'undefined') delete result.tv.programme[idx];
+				});
+
+				// write guide data to file
 				var xml = builder.buildObject(result);
 				epgFile = fs.createWriteStream(params.epg_output);
 				epgFile.write(xml);
 				epgFile.end();
-				buildM3u();
+
+				// remove streams that have no guide data, unless included in 'includeUnmatched'
+				for (var i=streams.length-1; i >= 0; i-=1) {					
+					if (!(streams[i].id)) {
+						if (!(params.includeUnmatched.groups.indexOf(streams[i].group) > -1 || params.includeUnmatched.channels.indexOf(streams[i].name) > -1)) {
+							streams.splice(i,1);
+						}
+					}
+				}
+				buildM3uFile();
 			});
 		}
 	}
