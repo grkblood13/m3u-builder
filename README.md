@@ -27,7 +27,7 @@ By default m3uBuilder omits channels without valid EPG data. How, you can add th
 
    `mv m3uBuilder-master m3uBuilder`
 
-3) Edit m3uBuilder/params.js to have valid XMLTV and M3U file inputs.
+3) Edit m3uBuilder/sources/SOURCE.cfg to have valid XMLTV and M3U file inputs.
 
 4) Add the following to root's crontab:
 
@@ -45,7 +45,7 @@ By default m3uBuilder omits channels without valid EPG data. How, you can add th
 
 4) Rename m3uBuilder-master to m3uBuilder
 
-5) Edit m3uBuilder/params.js to have valid XMLTV and M3U file inputs.
+5) Edit m3uBuilder/sources/SOURCE.cfg to have valid XMLTV and M3U file inputs.
 
 ## Run Instructions:
 
@@ -55,21 +55,19 @@ By default m3uBuilder omits channels without valid EPG data. How, you can add th
 
 ## Command Line Options:
 
---channels: Lists all channels in alphabetical order.
+--channels=SOURCE: Lists all channels in alphabetical order supplied from SOURCE.cfg file.
 
---groups: Lists all groups in alphabetical order.
+--groups=SOURCE: Lists all groups in alphabetical order supplied from SOURCE.cfg file.
 
 ## Configuration Instructions:
 
-m3uBuilder/params.js is where all configuration for m3uBuilder is done.
+At a minimum you must have one EPG and XMLTV source. Each source should have it's own FILE.cfg in the sources directory.
 
-At a minimum you must have EPG and XMLTV sources. The following is a brief run down of your options.
+All customization of channels and groups are done in these files.
 
-changeGroupTo [OBJ] - object of properties, which are old group names, and their associated string value, which is a new group name.
+### sources/SOURCE.cfg API
 
-  New group names can be used multiple times in order to merge groups into one.
-
-  * { OLD_NAME_1 [STR]: 'NEW_NAME',  OLD_NAME_2 [STR]: 'NEW_NAME', ... }
+REQUIRED:
 
 epg_input [OBJ] - URL to EPG source
 
@@ -79,7 +77,23 @@ epg_input [OBJ] - URL to EPG source
 
   * path [STR]: 'HOST_PATH'
 
-groupOrder [ARR] - order in which channel groups should be displayed on EPG. All remaining groups will be but in alphabetical order.
+  * auth (optional) [STR]: If password authentication is required for your epg then use this. example: 'username:password'
+
+m3u_input [OBJ] - URL to M3U source
+
+  * host [STR]: 'HOST_URL'
+
+  * port [STR]: 'HOST_PORT'
+
+  * path [STR]: 'HOST_PATH'
+
+  * auth (optional) [STR]: If password authentication is required for your m3u file then use this. example: 'username:password'
+
+OPTIONAL:
+
+changeGroupTo [ARRAY] - Change group names. The array consists of array pairs of a current group name and what you want to replace it with. Empty group names are supported.
+
+  `['','LOCAL']` - Make channels with no group name part of the LOCAL group.
 
 includeUnmatched [OBJ] - channels and groups that don't have any EPG data that you would still like to include in the final EPG.
 
@@ -93,8 +107,24 @@ omitMatched [OBJ] - channels and groups which should be omitted from EPG
 
   * channels [ARR]: channel names to omit`
 
-replaceWith [ARR] - pairs of matches made by regular expressions and what to replace them with. Each pair is it's own array.
+replaceInName [ARR] - Alter channel names. The array consists of array pairs of matches made by regular expressions and what to replace them with.
 
  `['\\\(.*\\\)','']` - Removes anything within () along with parenthesis themselves.
 
  `['US[/CA]*: ','']` - Removes 'US:' and 'US/CA: '.
+
+replaceInUrl [ARR] - This option is used to change urls in the M3U file. The array consists of array pairs of matches made by regular expressions and what to replace them with.
+
+ `['http://','http://user:pass@']` - Adds user authentication to streams. This is very useful with tvheadend.
+
+### params.cfg API
+
+REQUIRED:
+
+epg_output [STR] - Path to output EPG file
+
+m3u_output [STR] - Path to output M3U file
+
+OPTIONAL:
+
+groupOrder [ARR] - order in which channel groups should be displayed on EPG. All remaining groups will be but in alphabetical order.
