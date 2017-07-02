@@ -1,11 +1,11 @@
 var fs = require('fs');
 var http = require('http');
-var argv = require('./node_modules/minimist')(process.argv.slice(2));
-var merge = require('./node_modules/merge');
-var xml2js = require('./node_modules/xml2js');
+var argv = require(__dirname+'/node_modules/minimist')(process.argv.slice(2));
+var merge = require(__dirname+'/node_modules/merge');
+var xml2js = require(__dirname+'/node_modules/xml2js');
 var parser = new xml2js.Parser();
 var builder = new xml2js.Builder();
-var params = require('./params.cfg');
+var params = require(__dirname+'/params.cfg');
 
 var m3u = [];
 var streams = [];
@@ -24,7 +24,7 @@ var epgObj = {
 }
 		
 
-fs.readdirSync('./sources').forEach(function(file,idx) {
+fs.readdirSync(__dirname+'/sources').forEach(function(file,idx) {
 	_id=file.substr(0,file.lastIndexOf('.'));
 	sources[idx] = {
 		id: _id,
@@ -41,7 +41,7 @@ fs.readdirSync('./sources').forEach(function(file,idx) {
 		epg: '',
 		streams: []
 	}
-	sources[idx].params = merge.recursive(true,sources[idx].params,require('./sources/'+file));
+	sources[idx].params = merge.recursive(true,sources[idx].params,require(__dirname+'/sources/'+file));
 	numSources+=2;
 })
 
@@ -141,9 +141,9 @@ function buildStreams(sourceId,sourceStreams,_params) {
 
 		if (_remove==0) {
 			// change group name
+			//if (_params.changeGroupTo.hasOwnProperty(val.group)) val.group = _params.changeGroupTo[val.group];
  			index = _params.changeGroupTo.map(function(x) { return x[0] }).indexOf(val.group);
 			if (index > -1) val.group = _params.changeGroupTo[index][1];
-
 			// only keep wanted channels/groups
 		        if (!(_params.omitMatched.groups.indexOf(val.group) > -1 || _params.omitMatched.channels.indexOf(val.name) > -1)) {
 
@@ -203,27 +203,17 @@ function main() {
 	if (count==numSources) {
 		// print channels (CLI option)
 		if (argv.hasOwnProperty('channels')) {
-			if (argv.channels.length > 0) {
-				index = sources.map(function (_ob) { return _ob.id }).indexOf(argv.channels);
-				if (index > -1) {
-					sources[index].streams.sort(dynamicSort("name")).forEach(function(ob) {
-						console.log(ob.name);
-					});
-				}
-			}
+			m3u.sort(dynamicSort("name")).forEach(function(ob) {
+				console.log(ob.name);
+			});
 
 		// print groups (CLI option)
 		} else if (argv.hasOwnProperty('groups')) {
-			if (argv.groups.length > 0) {
-				index = sources.map(function (_ob) { return _ob.id }).indexOf(argv.groups);
-				if (index > -1) {
-					groups = [];
-					sources[index].streams.sort(dynamicSort("group")).forEach(function(ob) {
-						if (groups.indexOf(ob.group) < 0) { groups.push(ob.group); }
-					});
-					groups.forEach(function(val) { console.log(val); });
-				}
-			}
+			var groups = [];
+			m3u.sort(dynamicSort("group")).forEach(function(ob) {
+				if (groups.indexOf(ob.group) < 0) { groups.push(ob.group); }
+			});
+			groups.forEach(function(val) { console.log(val); });
 
 		// build files (core capability)
 		} else {
