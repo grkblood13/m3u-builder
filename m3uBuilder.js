@@ -201,19 +201,29 @@ function buildM3uFile(callback) {
 
 function main() {
 	if (count==numSources) {
-		// print channels (CLI option)
-		if (argv.hasOwnProperty('channels')) {
-			m3u.sort(dynamicSort("name")).forEach(function(ob) {
-				console.log(ob.name);
-			});
+                // print channels (CLI option)
+                if (argv.hasOwnProperty('channels')) {
+                        if (argv.channels.length > 0) {
+                                index = sources.map(function (_ob) { return _ob.id }).indexOf(argv.channels);
+                                if (index > -1) {
+                                        sources[index].streams.sort(dynamicSort("name")).forEach(function(ob) {
+                                                console.log(ob.name);
+                                        });
+                                }
+                        }
 
-		// print groups (CLI option)
-		} else if (argv.hasOwnProperty('groups')) {
-			var groups = [];
-			m3u.sort(dynamicSort("group")).forEach(function(ob) {
-				if (groups.indexOf(ob.group) < 0) { groups.push(ob.group); }
-			});
-			groups.forEach(function(val) { console.log(val); });
+                // print groups (CLI option)
+                } else if (argv.hasOwnProperty('groups')) {
+                        if (argv.groups.length > 0) {
+                                index = sources.map(function (_ob) { return _ob.id }).indexOf(argv.groups);
+                                if (index > -1) {
+                                        groups = [];
+                                        sources[index].streams.sort(dynamicSort("group")).forEach(function(ob) {
+                                                if (groups.indexOf(ob.group) < 0) { groups.push(ob.group); }
+                                        });
+                                        groups.forEach(function(val) { console.log(val); });
+                                }
+                        }
 
 		// build files (core capability)
 		} else {
