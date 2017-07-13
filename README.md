@@ -47,18 +47,6 @@ By default m3uBuilder omits channels without valid EPG data. How, you can add th
 
 5) Edit m3uBuilder/sources/SOURCE.cfg to have valid XMLTV and M3U file inputs.
 
-## Run Instructions:
-
-   $ node /opt/m3uBuilder/m3uBuilder.js
-
-   NOTE: For windows you will need to launch the nodejs command prompt
-
-## Command Line Options:
-
---channels=SOURCE: Lists all channels in alphabetical order supplied from SOURCE.cfg file.
-
---groups=SOURCE: Lists all groups in alphabetical order supplied from SOURCE.cfg file.
-
 ## Configuration Instructions:
 
 At a minimum you must have one EPG and XMLTV source. Each source should have it's own FILE.cfg in the sources directory.
@@ -69,7 +57,7 @@ All customization of channels and groups are done in these files.
 
 REQUIRED:
 
-epg_input [OBJ] - URL to EPG source
+epgInput [OBJ] - URL to EPG source
 
   * host [STR]: 'HOST_URL'
 
@@ -79,7 +67,7 @@ epg_input [OBJ] - URL to EPG source
 
   * auth (optional) [STR]: If password authentication is required for your epg then use this. example: 'username:password'
 
-m3u_input [OBJ] - URL to M3U source
+m3uInput [OBJ] - URL to M3U source
 
   * host [STR]: 'HOST_URL'
 
@@ -95,7 +83,7 @@ changeGroupTo [ARRAY] - Change group names. The array consists of array pairs of
 
   `['','LOCAL']` - Make channels with no group name part of the LOCAL group.
 
-includeUnmatched [OBJ] - channels and groups that don't have any EPG data that you would still like to include in the final EPG.
+includeUnmatched [OBJ] - channels and groups that don't have any EPG data that you would still like to include in the final EPG. This parameter is only used if withID is TRUE.
 
   * groups [ARR]: group names to include
 
@@ -117,14 +105,38 @@ replaceInUrl [ARR] - This option is used to change urls in the M3U file. The arr
 
  `['http://','http://user:pass@']` - Adds user authentication to streams. This is very useful with tvheadend.
 
+withID [BOOL] - Only includes channels with an ID set is set to TRUE. includeUnmatched takes precedence over this option.
+
+  Default value: FALSE
+
 ### params.cfg API
 
 REQUIRED:
 
-epg_output [STR] - Path to output EPG file
+epgOutput [STR] - Path to output EPG file
 
-m3u_output [STR] - Path to output M3U file
+m3uOutput [STR] - Path to output M3U file
 
 OPTIONAL:
 
 groupOrder [ARR] - order in which channel groups should be displayed on EPG. All remaining groups will be but in alphabetical order.
+
+## Run Instructions:
+
+   $ node /opt/m3uBuilder/m3uBuilder.js
+
+   NOTE: For windows you will need to launch the nodejs command prompt
+
+## Command Line Options:
+
+--groups=SOURCE: Lists all groups in alphabetical order supplied from SOURCE.cfg file.
+
+--info=SOURCE: Lists all information of channels supplied from SOURCE.cfg file.
+
+--sort-by=STRING: Sort output by parameter.
+
+  Possible values: 'id', 'name', 'logo', 'url', 'group'
+
+  Default value: 'name'
+
+--with-id: Makes --info output only display channels with an ID set, which means only channels with EPG data.

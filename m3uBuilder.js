@@ -22,34 +22,37 @@ var epgObj = {
 		programme: []
 	}
 }
-		
+var objElms = ['id','name','logo','url','group'];
 
 fs.readdirSync(__dirname+'/sources').forEach(function(file,idx) {
-	_id=file.substr(0,file.lastIndexOf('.'));
-	sources[idx] = {
-		id: _id,
-		params: {
-			epg_input: { host:'', port:'', path:'', auth:'' },
-			m3u_input: { host:'', port:'', path:'', auth:'' },
-			addAuthToStreams: '',
-			replaceInName: [],
-			replaceInUrl: [],
-			changeGroupTo: [],
-			omitMatched: { groups: [], channels: [] },
-			includeUnmatched: { groups: [], channels: [] }
-		},
-		epg: '',
-		streams: []
+	if (file.substr(0,1) != '.') {
+		_id=file.substr(0,file.lastIndexOf('.'));
+		sources[idx] = {
+			id: _id,
+			params: {
+				epgInput: { host:'', port:'', path:'', auth:'' },
+				m3uInput: { host:'', port:'', path:'', auth:'' },
+				addAuthToStreams: '',
+				replaceInName: [],
+				replaceInUrl: [],
+				changeGroupTo: [],
+				omitMatched: { groups: [], channels: [] },
+				includeUnmatched: { groups: [], channels: [] },
+				withID: false
+			},
+			epg: '',
+			streams: []
+		}
+		sources[idx].params = merge.recursive(true,sources[idx].params,require(__dirname+'/sources/'+file));
+		numSources+=2;
 	}
-	sources[idx].params = merge.recursive(true,sources[idx].params,require(__dirname+'/sources/'+file));
-	numSources+=2;
 })
 
 sources.forEach(function(sourceObj) {
 
-	var downloadEPG = http.request(sourceObj.params.epg_input, function(res) {
+	var downloadEPG = http.request(sourceObj.params.epgInput, function(res) {
 		_host=this._header.match(/Host\:(.*)/i)[1].trim().split(':');
-		index = sources.map(function (_ob) { return (_ob.params.epg_input.host===_host[0] && _ob.params.epg_input.port===parseInt(_host[1])); }).indexOf(true);
+		index = sources.map(function (_ob) { return (_ob.params.epgInput.host===_host[0] && _ob.params.epgInput.port===parseInt(_host[1])); }).indexOf(true);
 
 		res.setEncoding('utf8');
 		res.on('data', function (chunk) {
@@ -62,9 +65,9 @@ sources.forEach(function(sourceObj) {
 	});
 	downloadEPG.end();
 
-	var downloadM3U = http.request(sourceObj.params.m3u_input, function(res) {
+	var downloadM3U = http.request(sourceObj.params.m3uInput, function(res) {
 		_host = this._header.match(/Host\:(.*)/i)[1].trim().split(':');
-		index = sources.map(function (_ob) { return (_ob.params.m3u_input.host===_host[0] && _ob.params.m3u_input.port===parseInt(_host[1])); }).indexOf(true);
+		index = sources.map(function (_ob) { return (_ob.params.m3uInput.host===_host[0] && _ob.params.m3uInput.port===parseInt(_host[1])); }).indexOf(true);
 
 		var m3uString = '';
 		res.setEncoding('utf8');
@@ -134,14 +137,13 @@ function buildStreams(sourceId,sourceStreams,_params) {
         sourceStreams.forEach(function(val,idx) {
 
 		_remove=0;
-		// remove streams that have no guide data (really just checking 'id'), unless included in 'includeUnmatched'
-		if (val.id.length == 0) {
+		if (val.id.length == 0 && _params.withID == true) {
+			// remove streams with no ID, unless included in 'includeUnmatched'
 			if (!(_params.includeUnmatched.groups.indexOf(val.group) > -1 || _params.includeUnmatched.channels.indexOf(val.name) > -1)) _remove=1;
 		}
 
 		if (_remove==0) {
 			// change group name
-			//if (_params.changeGroupTo.hasOwnProperty(val.group)) val.group = _params.changeGroupTo[val.group];
  			index = _params.changeGroupTo.map(function(x) { return x[0] }).indexOf(val.group);
 			if (index > -1) val.group = _params.changeGroupTo[index][1];
 			// only keep wanted channels/groups
@@ -185,7 +187,7 @@ function buildM3uFile(callback) {
 	streams = sortedStreams.concat(streams.sort(dynamicSortMultiple("group", "name")));
 
 	// write new m3u file
-        m3ufile = fs.createWriteStream(params.m3u_output);
+        m3ufile = fs.createWriteStream(params.m3uOutput);
 	m3ufile.once('open', function(fd) {
 		m3ufile.write("#EXTM3U\n");
 		streams.forEach(function(val,idx) {
@@ -193,27 +195,16 @@ function buildM3uFile(callback) {
 			m3ufile.write(val.url+'\n');
 		})
 		m3ufile.end();
-		fs.chmodSync(params.m3u_output, 0777);
-		fs.chmodSync(params.epg_output, 0777);
+		fs.chmodSync(params.m3uOutput, 0777);
+		fs.chmodSync(params.epgOutput, 0777);
 		return callback();
 	});	
 }
 
 function main() {
 	if (count==numSources) {
-                // print channels (CLI option)
-                if (argv.hasOwnProperty('channels')) {
-                        if (argv.channels.length > 0) {
-                                index = sources.map(function (_ob) { return _ob.id }).indexOf(argv.channels);
-                                if (index > -1) {
-                                        sources[index].streams.sort(dynamicSort("name")).forEach(function(ob) {
-                                                console.log(ob.name);
-                                        });
-                                }
-                        }
-
                 // print groups (CLI option)
-                } else if (argv.hasOwnProperty('groups')) {
+                if (argv.hasOwnProperty('groups')) {
                         if (argv.groups.length > 0) {
                                 index = sources.map(function (_ob) { return _ob.id }).indexOf(argv.groups);
                                 if (index > -1) {
@@ -222,6 +213,22 @@ function main() {
                                                 if (groups.indexOf(ob.group) < 0) { groups.push(ob.group); }
                                         });
                                         groups.forEach(function(val) { console.log(val); });
+                                }
+                        }
+
+                // print all information (CLI option)
+                } else if (argv.hasOwnProperty('info')) {
+                        if (argv.info.length > 0) {
+                                index = sources.map(function (_ob) { return _ob.id }).indexOf(argv.info);
+                                if (index > -1) {
+					(objElms.indexOf(argv['sort-by']) > -1) ? _sort=argv['sort-by'] : _sort='name';
+                                        sources[index].streams.sort(dynamicSort(_sort)).forEach(function(ob) {
+						if (argv['with-id'] == true && ob.id.length == 0) return;
+						for (var key in ob) {
+                                                	if (ob[key].length == 0) delete ob[key]
+						}
+                                                console.log(JSON.stringify(ob));
+                                        });
                                 }
                         }
 
@@ -263,14 +270,14 @@ function main() {
 
 			// write guide data to file
 			var xml = builder.buildObject(epgObj);
-			epgFile = fs.createWriteStream(params.epg_output);
+			epgFile = fs.createWriteStream(params.epgOutput);
 			epgFile.write(xml);
 			epgFile.end();
 
 			buildM3uFile(function() {
 				console.log('m3uBuilder has successfully completed!');
-				console.log('M3U file: '+params.m3u_output);
-				console.log('XMLTV file: '+params.epg_output);
+				console.log('M3U file: '+params.m3uOutput);
+				console.log('XMLTV file: '+params.epgOutput);
 			});
 		}
 	}
