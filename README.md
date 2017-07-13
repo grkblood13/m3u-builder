@@ -5,8 +5,6 @@ m3uBuilder is a way to take an XMLTV file and m3u file and customize it to name 
 
 m3uBuilder requires Node.js and will run on either Windows or Linux. Other distros will probably work as well but haven't been tested.
 
-By default m3uBuilder omits channels without valid EPG data. How, you can add these channels/groups back in params.js
-
 ## Linux Installation Instructions:
 
 1) Install Node.js
