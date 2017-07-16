@@ -29,7 +29,7 @@ m3u-builder requires Node.js and will run on either Windows or Linux. Other dist
 
 4) Add the following to /etc/rc.local (this will update every 60 minutes):
 
-   /opt/m3u-builder/m3u-builder -n 60
+   /opt/m3u-builder/m3u-builder.js -n 60
    
 ## Windows Installation Instructions:
 
@@ -121,7 +121,7 @@ groupOrder [ARR] - order in which channel groups should be displayed on EPG. All
 
 ## Run Instructions:
 
-   $ /opt/m3u-builder/m3u-builder
+   $ /opt/m3u-builder/m3u-builder.js
 
    NOTE: For windows you will need to launch the nodejs command prompt
 
