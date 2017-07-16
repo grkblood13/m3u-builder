@@ -1,0 +1,31 @@
+v1.0.0
+- Changed name from m3uBuilder to m3u-builder.
+
+- Started process to release into npm module.
+
+- Added help menu (--help).
+
+- Added interval support to update files every N minutes (--interval=MINUTES).
+
+- Added server support to host files (--port=PORT).
+
+v0.0.2
+- Default behaviour of omitting channels with no ID changed to include all channels.
+
+- Added withID parameter to SOURCES config. If set to true only channels with IDs will be included.
+
+- Added CLI option --info=SOURCE which will output all information of stream
+
+- Added CLI option --with-id. If set STREAMS with no ID set will be omitted.
+
+- Added CLI option --sort-by=TYPE. This will output by id, name, logo, url, or group. DEFAULT=name
+
+- Removed CLI option --channels=SOURCE. Replaced with --info.
+
+- Changed any parameters with _input and _output in the name to Input and Output.
+
+v0.0.1
+- Added support for multiple sources.
+
+v0.0.0
+- Prototype release

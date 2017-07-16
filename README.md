@@ -1,9 +1,9 @@
-# m3uBuilder
+# m3u-builder
 Customize existing m3u lists and xmltv guides that can be used with IPTV Simple Client.
 
-m3uBuilder is a way to take an XMLTV file and m3u file and customize it to name the channels what you want them to be, order them how you want them displayed and remove channels that you don't want listed.
+m3u-builder is a way to take an XMLTV file and m3u file and customize it to name the channels what you want them to be, order them how you want them displayed and remove channels that you don't want listed.
 
-m3uBuilder requires Node.js and will run on either Windows or Linux. Other distros will probably work as well but haven't been tested.
+m3u-builder requires Node.js and will run on either Windows or Linux. Other distros will probably work as well but haven't been tested.
 
 ## Linux Installation Instructions:
 
@@ -13,23 +13,23 @@ m3uBuilder requires Node.js and will run on either Windows or Linux. Other distr
    
    rpm: `yum install nodejs`
    
-1) Download m3uBuilder-master.zip directory to /opt
+1) Download m3u-builder-master.zip directory to /opt
 
    `cd /opt`
 
-   `wget https://github.com/grkblood13/m3uBuilder/archive/master.zip`
+   `wget https://github.com/grkblood13/m3u-builder/archive/master.zip`
 
-2) Unzip and move m3uBuilder-master directory to /opt/m3uBuilder
+2) Unzip and move m3u-builder-master directory to /opt/m3u-builder
 
-   `unzip m3uBuilder-master.zip`
+   `unzip m3u-builder-master.zip`
 
-   `mv m3uBuilder-master m3uBuilder`
+   `mv m3u-builder-master m3u-builder`
 
-3) Edit m3uBuilder/sources/SOURCE.cfg to have valid XMLTV and M3U file inputs.
+3) Edit m3u-builder/sources/SOURCE.cfg to have valid XMLTV and M3U file inputs.
 
-4) Add the following to root's crontab:
+4) Add the following to /etc/rc.local (this will update every 60 minutes):
 
-   0 5 * * * node /opt/m3uBuilder/m3uBuilder.js
+   /opt/m3u-builder/m3u-builder -n 60
    
 ## Windows Installation Instructions:
 
@@ -37,13 +37,13 @@ m3uBuilder requires Node.js and will run on either Windows or Linux. Other distr
 
    https://nodejs.org/en/download/
    
-2) Download m3uBuilder-master.zip
+2) Download m3u-builder-master.zip
 
 3) Extra file via 7zip by right clicking on the zipped file and going to 7-Zip > Extract Here
 
-4) Rename m3uBuilder-master to m3uBuilder
+4) Rename m3u-builder-master to m3u-builder
 
-5) Edit m3uBuilder/sources/SOURCE.cfg to have valid XMLTV and M3U file inputs.
+5) Edit m3u-builder/sources/SOURCE.cfg to have valid XMLTV and M3U file inputs.
 
 ## Configuration Instructions:
 
@@ -103,7 +103,7 @@ replaceInUrl [ARR] - This option is used to change urls in the M3U file. The arr
 
  `['http://','http://user:pass@']` - Adds user authentication to streams. This is very useful with tvheadend.
 
-withID [BOOL] - Only includes channels with an ID set is set to TRUE. includeUnmatched takes precedence over this option.
+withID [BOOL] - Only include channels with an ID set is set to TRUE. includeUnmatched takes precedence over this option.
 
   Default value: FALSE
 
@@ -121,17 +121,23 @@ groupOrder [ARR] - order in which channel groups should be displayed on EPG. All
 
 ## Run Instructions:
 
-   $ node /opt/m3uBuilder/m3uBuilder.js
+   $ /opt/m3u-builder/m3u-builder
 
    NOTE: For windows you will need to launch the nodejs command prompt
 
 ## Command Line Options:
 
---groups=SOURCE: Lists all groups in alphabetical order supplied from SOURCE.cfg file.
+--groups SOURCE: Lists all groups in alphabetical order supplied from SOURCE.cfg file.
 
---info=SOURCE: Lists all information of channels supplied from SOURCE.cfg file.
+--info SOURCE: Lists all information of channels supplied from SOURCE.cfg file.
 
---sort-by=STRING: Sort output by parameter.
+-h, --help: print help menu.
+
+-n, --interval MINUTES: run m3u-builder every N minutes. Must be set to atleast 5 minutes.
+
+-p, --port PORT: Host files at a specific port to use network links instead of static file paths.
+
+--sort-by STRING: Sort output by parameter.
 
   Possible values: 'id', 'name', 'logo', 'url', 'group'
 
