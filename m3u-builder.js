@@ -130,8 +130,8 @@ function buildM3uFile(streams, callback) {
 	m3ufile.once('open', function(fd) {
 		m3ufile.write("#EXTM3U\n");
 		streams.forEach(function(val,idx) {
-                        m3ufile.write('#EXTINF:-1, tvg-id="'+val.id+'" tvg-name="'+val.name+'" tvg-logo="'+val.logo+'" group-title="'+val.group+'", '+val.name+'\r');
-			m3ufile.write(val.url+'\r');
+                        m3ufile.write('#EXTINF:-1, tvg-id="'+val.id+'" tvg-name="'+val.name+'" tvg-logo="'+val.logo+'" group-title="'+val.group+'", '+val.name+'\n');
+			m3ufile.write(val.url+'\n');
 		})
 		m3ufile.end();
 		fs.chmodSync(params.m3uOutput, 0777);
