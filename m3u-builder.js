@@ -218,6 +218,9 @@ function fetchSources(callback) {
 				_count++;
 				if (_count==_numSources) return callback(_sources);
 			});
+		}).on('error', function(e) {
+			_err='epg download failed. reason: '+JSON.stringify(e);
+			return callback({error:_err});
 		});
 		downloadEPG.end();
 
@@ -255,6 +258,9 @@ function fetchSources(callback) {
 				_count++;
 				if (_count==_numSources) return callback(_sources);
 			});
+		}).on('error', function(e) {
+			_err='m3u download failed. reason: '+JSON.stringify(e);
+			return callback({error:_err});
 		});
 		downloadM3U.end();
 	});
@@ -262,6 +268,10 @@ function fetchSources(callback) {
 
 function printGroups() {
 	fetchSources(function(_sources) {
+		if (_sources.hasOwnProperty('error')) {
+			console.log(_sources.error);
+			return;
+		}
 		if (argv.groups.length > 0) {
 			index = _sources.map(function (_ob) { return _ob.id }).indexOf(argv.groups);
 			if (index > -1) {
@@ -271,6 +281,8 @@ function printGroups() {
 				});
 				_groups.forEach(function(val) { console.log(val); });
 			}
+		} else {
+			console.log('source not specified.');
 		}
 	})
 }
@@ -313,6 +325,10 @@ function printHelp() {
 function printInfo() {
 	_objElms = ['id','name','logo','url','group'];
 	fetchSources(function(_sources) {
+		if (_sources.hasOwnProperty('error')) {
+			console.log(_sources.error);
+			return;
+		}
 		if (argv.info.length > 0) {
 		        index = _sources.map(function (_ob) { return _ob.id }).indexOf(argv.info);
 		        if (index > -1) {
@@ -325,6 +341,8 @@ function printInfo() {
 		                        console.log(JSON.stringify(ob));
 		                });
 		        }
+		} else {
+			console.log('source not specified.');
 		}
 	});
 }
@@ -342,6 +360,10 @@ function runBuilder(callback) {
 	}
 
 	fetchSources(function(_sources) {
+		if (_sources.hasOwnProperty('error')) {
+			console.log(_sources.error);
+			return;
+		}
 		_streams = [];
 		_sources.forEach(function(sourceObj) {
 
