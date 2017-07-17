@@ -59,7 +59,7 @@ epgInput [OBJ] - URL to EPG source
 
   * host [STR]: 'HOST_URL'
 
-  * port [STR]: 'HOST_PORT'
+  * port [NUM]: HOST_PORT
 
   * path [STR]: 'HOST_PATH'
 
@@ -69,7 +69,7 @@ m3uInput [OBJ] - URL to M3U source
 
   * host [STR]: 'HOST_URL'
 
-  * port [STR]: 'HOST_PORT'
+  * port [NUM]: HOST_PORT
 
   * path [STR]: 'HOST_PATH'
 
