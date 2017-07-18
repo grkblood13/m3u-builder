@@ -76,6 +76,15 @@ function main() {
 }
 
 // general functions
+function checkNested(obj) {
+	var args = Array.prototype.slice.call(arguments, 1);
+	for (var i = 0; i < args.length; i++) {
+		if (!obj || !obj.hasOwnProperty(args[i])) return false;
+		obj = obj[args[i]];
+	}
+	return true;
+}
+
 function dynamicSort(property) {
     var sortOrder = 1;
     if(property[0] === "-") {
@@ -372,6 +381,10 @@ function runBuilder(callback) {
 			sourceObj.epg=sourceObj.epg.replace(/<tv /,'<tv generator-info-id="'+sourceObj.id+'" ');
 
 			parser.parseString(sourceObj.epg, function (err, result) {
+				if (err != null || checkNested(result,'tv','$','generator-info-id') == false) {
+					console.log('invalid xmltv file. skipping entry.');
+					return;
+				}
 				key=result.tv.$['generator-info-id'];
 				result.tv.channel.forEach(function(channel,idx) {
 					// prepend identifier to channel data
