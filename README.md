@@ -5,6 +5,18 @@ m3u-builder is a way to take an XMLTV file and m3u file and customize it to name
 
 m3u-builder requires Node.js and will run on either Windows or Linux. Other distros will probably work as well but haven't been tested.
 
+If you have experience with making github readme files and would be willing to make this better please let me know.
+
+## NPM Installation Instructions:
+
+   sudo npm install m3u-builder -g
+
+   NOTES:
+
+     root directory when installed via npm is /usr/lib/node_modules
+
+     can be called by simply typing 'm3u-builder'.
+
 ## Linux Installation Instructions:
 
 1) Install Node.js
@@ -13,13 +25,13 @@ m3u-builder requires Node.js and will run on either Windows or Linux. Other dist
    
    rpm: `yum install nodejs`
    
-1) Download m3u-builder-master.zip directory to /opt
+1) Download m3u-builder-master.zip directory to /usr/lib/node_modules
 
-   `cd /opt`
+   `cd /usr/lib/node_modules`
 
    `wget https://github.com/grkblood13/m3u-builder/archive/master.zip`
 
-2) Unzip and move m3u-builder-master directory to /opt/m3u-builder
+2) Unzip and move m3u-builder-master directory to /usr/lib/node_modules/m3u-builder
 
    `unzip m3u-builder-master.zip`
 
@@ -27,10 +39,16 @@ m3u-builder requires Node.js and will run on either Windows or Linux. Other dist
 
 3) Edit m3u-builder/sources/SOURCE.cfg to have valid XMLTV and M3U file inputs.
 
-4) Add the following to /etc/rc.local (this will update every 60 minutes):
+NOTE: To run continuously either:
 
-   /opt/m3u-builder/m3u-builder.js -n 60
-   
+   add the following to /etc/rc.local (this will update every 60 minutes):
+
+     /usr/lib/node_modules/m3u-builder/m3u-builder.js -n 60
+
+   add the following to root's crontab via crontab -e (this will update every 60 minutes):
+
+     0 * * * * /usr/lib/node_modules/m3u-builder/m3u-builder.js
+
 ## Windows Installation Instructions:
 
 1) Download and install Node.js
@@ -59,7 +77,7 @@ epgInput [OBJ] - URL to EPG source
 
   * host [STR]: 'HOST_URL'
 
-  * port [NUM]: HOST_PORT
+  * port [STR]: 'HOST_PORT'
 
   * path [STR]: 'HOST_PATH'
 
@@ -69,7 +87,7 @@ m3uInput [OBJ] - URL to M3U source
 
   * host [STR]: 'HOST_URL'
 
-  * port [NUM]: HOST_PORT
+  * port [STR]: 'HOST_PORT'
 
   * path [STR]: 'HOST_PATH'
 
@@ -121,7 +139,7 @@ groupOrder [ARR] - order in which channel groups should be displayed on EPG. All
 
 ## Run Instructions:
 
-   $ /opt/m3u-builder/m3u-builder.js
+   $ /usr/lib/node_modules/m3u-builder/m3u-builder.js
 
    NOTE: For windows you will need to launch the nodejs command prompt
 

@@ -1,11 +1,18 @@
 {
     "name": "m3u-builder",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "bin": { "m3u-builder" : "./m3u-builder.js" },
     "description": "Customize existing m3u lists and xmltv guides that can be used with IPTV Simple Client.",
     "keywords": ["m3u", "xmltv","kodi","iptv"],
     "repository": "https://github.com/grkblood13/m3u-builder.git",
     "author": "grkblood13 <grkblood13@hotmail.com>",
+	"dependencies": {
+	"connect": "3.6.2",
+	"merge": "1.2.0",
+	"minimist": "1.2.0",
+	"serve-static": "1.12.3",
+	"xml2js": "0.4.17"
+  },
     "engines": {
         "node": ">= 0.10.0"
     }
