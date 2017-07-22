@@ -145,6 +145,10 @@ groupOrder [ARR] - order in which channel groups should be displayed on EPG. All
 
 ## Command Line Options:
 
+-c, --cfg CFG_FILE: Params config file. Default: ~/params.cfg
+
+-d, --dir SOURCE_DIR: Directory containing source config files. Default: ~/sources
+
 --groups SOURCE: Lists all groups in alphabetical order supplied from SOURCE.cfg file.
 
 --info SOURCE: Lists all information of channels supplied from SOURCE.cfg file.
@@ -155,10 +159,8 @@ groupOrder [ARR] - order in which channel groups should be displayed on EPG. All
 
 -p, --port PORT: Host files at a specific port to use network links instead of static file paths.
 
---sort-by STRING: Sort output by parameter.
+--sort-by STRING: Sort output by parameter. Default: 'name'
 
   Possible values: 'id', 'name', 'logo', 'url', 'group'
-
-  Default value: 'name'
 
 --with-id: Makes --info output only display channels with an ID set, which means only channels with EPG data.

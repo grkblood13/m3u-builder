@@ -2,6 +2,7 @@
 
 var fs		= require('fs');
 var http	= require('http');
+var resolve	= require('path').resolve;
 var argv	= require(__dirname+'/node_modules/minimist')(process.argv.slice(2));
 var connect	= require(__dirname+'/node_modules/connect');
 var merge	= require(__dirname+'/node_modules/merge');
@@ -9,10 +10,36 @@ var serveStatic	= require(__dirname+'/node_modules/serve-static');
 var xml2js	= require(__dirname+'/node_modules/xml2js');
 var parser	= new xml2js.Parser();
 var builder	= new xml2js.Builder();
-var params	= require(__dirname+'/params.cfg');
+var params;
 
 function main() {
 	_itv=0;
+
+	sourceCfg=__dirname+'/params.cfg';
+	['c','cfg'].forEach(function(val) {
+		if (argv.hasOwnProperty(val)) {
+			if (typeof argv[val] == 'string') {
+				try {
+					_stat=fs.statSync(argv[val]);
+					if (_stat.isFile()) sourceCfg=resolve(argv[val]);
+				} catch(e) {};
+			}
+		}
+	});
+	params = require(sourceCfg);
+
+	sourceDir=__dirname+'/sources';
+	['d','dir'].forEach(function(val) {
+		if (argv.hasOwnProperty(val)) {
+			if (typeof argv[val] == 'string') {
+				try {
+					_stat=fs.statSync(argv[val]);
+					if (_stat.isDirectory()) sourceDir=resolve(argv[val]);
+				} catch(e) {};
+			}
+		}
+	});
+
 	if (argv.hasOwnProperty('groups')) {
 		printGroups();
 	} else if (argv.hasOwnProperty('help') || argv.hasOwnProperty('h')) {
@@ -22,11 +49,8 @@ function main() {
 	} else {
 		if (argv.hasOwnProperty('port') || argv.hasOwnProperty('p')) {
 			_port=80;
-			if (argv.p >= 0) {
-				_port=argv.p;
-			} else if (argv.port >= 0) {
-				_port=argv.port;
-			}
+			if (argv.p >= 0) _port=argv.p;
+			if (argv.port >= 0) _port=argv.port;
 
 			_hostdir=params.m3uOutput.substring(0, Math.max(params.m3uOutput.lastIndexOf("/"), params.m3uOutput.lastIndexOf("\\")));
 			connect().use(serveStatic(_hostdir)).listen(_port, function(){
@@ -184,11 +208,12 @@ function buildStreams(sourceId,sourceStreams,_params) {
 	return _streams;
 }
 
-function fetchSources(callback) {
+function fetchSources(req, callback) {
 	_count=0;
 	_numSources=0;
 	_sources=[];
-	fs.readdirSync(__dirname+'/sources').forEach(function(file,idx) {
+	fs.readdirSync(req).forEach(function(file,idx) {
+	//fs.readdirSync(__dirname+'/sources').forEach(function(file,idx) {
 		if (file.substr(0,1) != '.') {
 			_id=file.substr(0,file.lastIndexOf('.'));
 			_sources[idx] = {
@@ -207,7 +232,8 @@ function fetchSources(callback) {
 				epg: '',
 				streams: []
 			}
-			_sources[idx].params = merge.recursive(true,_sources[idx].params,require(__dirname+'/sources/'+file));
+			_sources[idx].params = merge.recursive(true,_sources[idx].params,require(req+'/'+file));
+			//_sources[idx].params = merge.recursive(true,_sources[idx].params,require(__dirname+'/sources/'+file));
 			_numSources+=2;
 		}
 	})
@@ -276,7 +302,7 @@ function fetchSources(callback) {
 }
 
 function printGroups() {
-	fetchSources(function(_sources) {
+	fetchSources(sourceDir, function(_sources) {
 		if (_sources.hasOwnProperty('error')) {
 			console.log(_sources.error);
 			return;
@@ -333,7 +359,7 @@ function printHelp() {
 
 function printInfo() {
 	_objElms = ['id','name','logo','url','group'];
-	fetchSources(function(_sources) {
+	fetchSources(sourceDir, function(_sources) {
 		if (_sources.hasOwnProperty('error')) {
 			console.log(_sources.error);
 			return;
@@ -368,7 +394,7 @@ function runBuilder(callback) {
 		}
 	}
 
-	fetchSources(function(_sources) {
+	fetchSources(sourceDir, function(_sources) {
 		if (_sources.hasOwnProperty('error')) {
 			console.log(_sources.error);
 			return;

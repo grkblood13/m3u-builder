@@ -1,3 +1,8 @@
+v1.2.0
+- Added CLI option -d, --dir to define directory for sources
+
+- Added CLI option -c, --cfg to define params.cfg file
+
 v1.1.1
 - Fixed npm bugs
 
