@@ -11,11 +11,11 @@ If you have experience with making github readme files and would be willing to m
 
    sudo npm install m3u-builder -g
 
-   NOTES:
+NOTES:
 
-     root directory when installed via npm is /usr/lib/node_modules
+  Root directory when installed via npm is /usr/lib/node_modules
 
-     can be called by simply typing 'm3u-builder'.
+  Tool be called by simply typing 'm3u-builder'.
 
 ## Linux Installation Instructions:
 
@@ -25,19 +25,19 @@ If you have experience with making github readme files and would be willing to m
    
    rpm: `yum install nodejs`
    
-1) Download m3u-builder-master.zip directory to /usr/lib/node_modules
+2) Download m3u-builder-master.zip directory to /usr/lib/node_modules
 
    `cd /usr/lib/node_modules`
 
    `wget https://github.com/grkblood13/m3u-builder/archive/master.zip`
 
-2) Unzip and move m3u-builder-master directory to /usr/lib/node_modules/m3u-builder
+3) Unzip and move m3u-builder-master directory to /usr/lib/node_modules/m3u-builder
 
    `unzip m3u-builder-master.zip`
 
    `mv m3u-builder-master m3u-builder`
 
-3) Edit m3u-builder/sources/SOURCE.cfg to have valid XMLTV and M3U file inputs.
+4) Edit m3u-builder/sources/SOURCE.cfg to have valid XMLTV and M3U file inputs.
 
 NOTE: To run continuously either:
 
@@ -47,7 +47,7 @@ NOTE: To run continuously either:
 
    add the following to root's crontab via crontab -e (this will update every 60 minutes):
 
-     0 * * * * /usr/lib/node_modules/m3u-builder/m3u-builder.js
+     0 * * * * nodejs /usr/lib/node_modules/m3u-builder/m3u-builder.js
 
 ## Windows Installation Instructions:
 

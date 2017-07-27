@@ -1,7 +1,14 @@
-v1.2.0
-- Added CLI option -d, --dir to define directory for sources
+v1.3.0
+- Integrated numeric ordering behaviour to strings instead of the standard lexicographic order.
 
-- Added CLI option -c, --cfg to define params.cfg file
+- Added CLI option -o, --output to format output of --info.
+
+- Updated help menu.
+
+v1.2.0
+- Added CLI option -d, --dir to define directory for sources.
+
+- Added CLI option -c, --cfg to define params.cfg file.
 
 v1.1.1
 - Fixed npm bugs

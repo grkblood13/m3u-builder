@@ -149,14 +149,14 @@ function buildM3uFile(streams, callback) {
 	                	streamGroup.push(ob);
 	        	}
 		});
-		sortedStreams = sortedStreams.concat(streamGroup.sort(dynamicSort("name")));				
+		sortedStreams = sortedStreams.concat(streamGroup.sort(compareNames));				
 	});
 
 	// remove group ordered streams from stream list then sort remaining groups
 	streams = streams.filter(function(ob) {
 		return params.groupOrder.indexOf(ob.group) < 0;
 	});
-	streams = sortedStreams.concat(streams.sort(dynamicSortMultiple("group", "name")));
+	streams = sortedStreams.concat(sortGroupsThenNames(streams));
 
 	// write new m3u file
         m3ufile = fs.createWriteStream(params.m3uOutput);
@@ -174,10 +174,8 @@ function buildM3uFile(streams, callback) {
 }
 
 function buildStreams(sourceId,sourceStreams,_params) {
-
 	_streams = [];
         sourceStreams.forEach(function(val,idx) {
-
 		_remove=0;
 		if (val.id.length == 0 && _params.withID == true) {
 			// remove streams with no ID, unless included in 'includeUnmatched'
@@ -204,8 +202,26 @@ function buildStreams(sourceId,sourceStreams,_params) {
 			}
 		}
 	});
-
 	return _streams;
+}
+
+function compareNames(a,b) {
+	var alist = a.name.split(/(\d+)/),
+	blist = b.name.split(/(\d+)/);
+
+	alist.slice(-1) == '' ? alist.pop() : null;
+	blist.slice(-1) == '' ? blist.pop() : null;
+
+	for (var i = 0, len = alist.length; i < len;i++){
+		if (alist[i] != blist[i]){
+			if (alist[i].match(/\d/)) {
+				return +alist[i] - +blist[i];
+			} else {
+				return alist[i].localeCompare(blist[i]);
+			}
+		}
+	}   
+	return true;
 }
 
 function fetchSources(req, callback) {
@@ -213,7 +229,6 @@ function fetchSources(req, callback) {
 	_numSources=0;
 	_sources=[];
 	fs.readdirSync(req).forEach(function(file,idx) {
-	//fs.readdirSync(__dirname+'/sources').forEach(function(file,idx) {
 		if (file.substr(0,1) != '.') {
 			_id=file.substr(0,file.lastIndexOf('.'));
 			_sources[idx] = {
@@ -233,7 +248,6 @@ function fetchSources(req, callback) {
 				streams: []
 			}
 			_sources[idx].params = merge.recursive(true,_sources[idx].params,require(req+'/'+file));
-			//_sources[idx].params = merge.recursive(true,_sources[idx].params,require(__dirname+'/sources/'+file));
 			_numSources+=2;
 		}
 	})
@@ -301,6 +315,14 @@ function fetchSources(req, callback) {
 	});
 }
 
+function getGroups(arr) {
+	_groups = [];
+	arr.forEach(function(val) {
+		if (_groups.indexOf(val.group) == -1) { _groups.push(val.group); }
+	});
+	return _groups;
+}
+
 function printGroups() {
 	fetchSources(sourceDir, function(_sources) {
 		if (_sources.hasOwnProperty('error')) {
@@ -310,10 +332,7 @@ function printGroups() {
 		if (argv.groups.length > 0) {
 			index = _sources.map(function (_ob) { return _ob.id }).indexOf(argv.groups);
 			if (index > -1) {
-				_groups = [];
-				_sources[index].streams.sort(dynamicSort("group")).forEach(function(ob) {
-				        if (_groups.indexOf(ob.group) < 0) { _groups.push(ob.group); }
-				});
+				_groups=getGroups(_sources[index].streams).sort();
 				_groups.forEach(function(val) { console.log(val); });
 			}
 		} else {
@@ -323,8 +342,7 @@ function printGroups() {
 }
 
 function printHelp() {
-	console.log('\033c')
-	console.log('M3U-BUILDER(1)');
+	console.log('M3U-BUILDER MANPAGE');
 	console.log('\r');
 	console.log('NAME');
 	console.log('\tm3u-builder');
@@ -336,6 +354,12 @@ function printHelp() {
 	console.log('\tm3u-builder is a tool that takes existing m3u playlists with associated xmltv epg files and edits them to fit your exact needs.');
 	console.log('\r');
 	console.log('OPTIONS');
+	console.log('\t-c, --cfg CFG_FILE');
+	console.log('\t\tParams config file. Default: ~/params.cfg');
+	console.log('\r');
+	console.log('\t-d, --dir SOURCE_DIR');
+	console.log('\t\tDirectory containing source config files. Default: ~/sources');
+	console.log('\r');
 	console.log('\t--groups SOURCE');
 	console.log('\t\tLists all groups in alphabetical order supplied from SOURCE.cfg file.');
 	console.log('\r');
@@ -344,6 +368,10 @@ function printHelp() {
 	console.log('\r');
 	console.log('\t-n, --interval MINUTES');
 	console.log('\t\tRun m3u-builder every N minutes. Must be set to atleast 5 minutes.');
+	console.log('\r');
+	console.log('\t-o, --output ELM1,ELM2,...');
+	console.log('\t\tFormat output of --info.');
+	console.log('\t\tPossible values: \'id\', \'name\', \'logo\', \'url\', \'group\'');
 	console.log('\r');
 	console.log('\t-p, --port PORT');
 	console.log('\t\tHost files at a specific port to use network links instead of static file paths.');
@@ -365,14 +393,18 @@ function printInfo() {
 			return;
 		}
 		if (argv.info.length > 0) {
+
+			(typeof argv.output == 'string') ? _out=argv.output.split(',') : _out=_objElms;
+			(typeof argv.o == 'string') ? _out=argv.o.split(',') : _out=_objElms;
+
 		        index = _sources.map(function (_ob) { return _ob.id }).indexOf(argv.info);
 		        if (index > -1) {
 				(_objElms.indexOf(argv['sort-by']) > -1) ? _sort=argv['sort-by'] : _sort='name';
 		                _sources[index].streams.sort(dynamicSort(_sort)).forEach(function(ob) {
 					if (argv['with-id'] == true && ob.id.length == 0) return;
-					for (var key in ob) {
-		                        	if (ob[key].length == 0) delete ob[key]
-					}
+					for (var key in ob) {		
+		                        	if (ob[key].length == 0 || _out.indexOf(key) == -1) delete ob[key]
+					}			
 		                        console.log(JSON.stringify(ob));
 		                });
 		        }
@@ -447,6 +479,17 @@ function runBuilder(callback) {
 			return callback();
 		});
 	});
+}
+
+function sortGroupsThenNames(arr) {
+	_groups=getGroups(arr).sort();
+	_output = [];
+	_groups.forEach(function(val) {
+		_match=arr.filter(function(ob) { return ob.group == val; });
+		_match.sort(compareNames);
+		_output = _output.concat(_match);
+	});
+	return _output;
 }
 
 main();

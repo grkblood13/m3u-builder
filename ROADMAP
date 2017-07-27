@@ -1,5 +1,7 @@
 ROADMAP
 
+- Figure out why nodejs needs to be called in crontab.
+
 - Find someone to make a better README file.
 
 - Add a way to start natively at boot time on linux in the event that /etc/rc.local is not present.
