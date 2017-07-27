@@ -157,6 +157,10 @@ groupOrder [ARR] - order in which channel groups should be displayed on EPG. All
 
 -n, --interval MINUTES: run m3u-builder every N minutes. Must be set to atleast 5 minutes.
 
+-o, --output ELM1,ELM2,...: Format output of info.
+
+  Possible values: 'id', 'name', 'logo', 'url', 'group'
+
 -p, --port PORT: Host files at a specific port to use network links instead of static file paths.
 
 --sort-by STRING: Sort output by parameter. Default: 'name'
