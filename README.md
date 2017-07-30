@@ -7,31 +7,31 @@ m3u-builder requires Node.js and will run on either Windows or Linux.
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. 
+These instructions will get you a copy of the project up and running on your local machine. 
 
 ### Prerequisites
 
-Node.js is the only requirement to run m3u-builder. The following instructions are OS specific ways to install Node.js
+Node.js is the only requirement to run m3u-builder. The following instructions are OS specific ways to install Node.js.
 
-WINDOWS:
+Windows:
 
 [Download](https://nodejs.org/en/download/) from official Node.js site and run the Windows installer.
 
-DEBIAN-BASED LINUX:
+Debian-based Linux:
 
 Launch a terminal window and run `apt-get install nodejs`
 
-YUM-BASED LINUX:
+YUM-based Linux:
 
 Launch a terminal window and run `yum install nodejs`
 
 ### Installing
 
-WINDOWS:
+Windows:
 
 Launch the Node.js command prompt and run `npm install m3u-builder -g`
 
-LINUX:
+Linux:
 
 Launch a terminal window and run `sudo npm install m3u-builder -g`
 
