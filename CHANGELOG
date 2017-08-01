@@ -1,3 +1,8 @@
+v1.3.1
+- Added static file support for M3U and EPG file inputs.
+
+- Updated README.md
+
 v1.3.0
 - Integrated numeric ordering behaviour to strings instead of the standard lexicographic order.
 

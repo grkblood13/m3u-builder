@@ -234,8 +234,8 @@ function fetchSources(req, callback) {
 			_sources[idx] = {
 				id: _id,
 				params: {
-					epgInput: { host:'', port:'', path:'', auth:'' },
-					m3uInput: { host:'', port:'', path:'', auth:'' },
+					epgInput: { host:'', port:'', path:'', auth:'', file:'' },
+					m3uInput: { host:'', port:'', path:'', auth:'', file:'' },
 					addAuthToStreams: '',
 					replaceInName: [],
 					replaceInUrl: [],
@@ -255,63 +255,56 @@ function fetchSources(req, callback) {
 	_sources.forEach(function(sourceObj,idx) {
 		_sources[idx].epg = '';
 		_sources[idx].streams = [];
-		var downloadEPG = http.request(sourceObj.params.epgInput, function(res) {
-			_host=this._header.match(/Host\:(.*)/i)[1].trim().split(':');
-			index = _sources.map(function (_ob) { return (_ob.params.epgInput.host===_host[0] && _ob.params.epgInput.port===parseInt(_host[1])); }).indexOf(true);
 
-			res.setEncoding('utf8');
-			res.on('data', function (chunk) {
-				_sources[index].epg+=chunk;
-			});
-			res.on('end', function() {
-				_count++;
-				if (_count==_numSources) return callback(_sources);
-			});
-		}).on('error', function(e) {
-			_err='epg download failed. reason: '+JSON.stringify(e);
-			return callback({error:_err});
-		});
-		downloadEPG.end();
+		if (sourceObj.params.epgInput.file.length > 0) {
+			_sources[idx].epg=fs.readFileSync(sourceObj.params.epgInput.file, {encoding:'utf8'});
+			_count++;
+			if (_count==_numSources) return callback(_sources);
+		} else {
+			var downloadEPG = http.request(sourceObj.params.epgInput, function(res) {
+				_host=this._header.match(/Host\:(.*)/i)[1].trim().split(':');
+				index = _sources.map(function (_ob) { return (_ob.params.epgInput.host===_host[0] && _ob.params.epgInput.port===parseInt(_host[1])); }).indexOf(true);
 
-		var downloadM3U = http.request(sourceObj.params.m3uInput, function(res) {
-			_host = this._header.match(/Host\:(.*)/i)[1].trim().split(':');
-			index = _sources.map(function (_ob) { return (_ob.params.m3uInput.host===_host[0] && _ob.params.m3uInput.port===parseInt(_host[1])); }).indexOf(true);
+				res.setEncoding('utf8');
+				res.on('data', function (chunk) {
+					_sources[index].epg+=chunk;
+				});
+				res.on('end', function() {
+					_count++;
+					if (_count==_numSources) return callback(_sources);
+				});
+			}).on('error', function(e) {
+				_err='epg download failed. reason: '+JSON.stringify(e);
+				return callback({error:_err});
+			});
+			downloadEPG.end();
+		}
 
-			var m3uString = '';
-			res.setEncoding('utf8');
-			res.on('data', function (chunk) {
-				m3uString+=chunk;
+		if (sourceObj.params.m3uInput.file.length > 0) {
+			_sources[idx].streams=parseM3U(fs.readFileSync(sourceObj.params.m3uInput.file, {encoding:'utf8'}));
+			_count++;
+			if (_count==_numSources) return callback(_sources);
+		} else {
+			var downloadM3U = http.request(sourceObj.params.m3uInput, function(res) {
+				_host = this._header.match(/Host\:(.*)/i)[1].trim().split(':');
+				index = _sources.map(function (_ob) { return (_ob.params.m3uInput.host===_host[0] && _ob.params.m3uInput.port===parseInt(_host[1])); }).indexOf(true);
+
+				var m3uString = '';
+				res.setEncoding('utf8');
+				res.on('data', function (chunk) {
+					m3uString+=chunk;
+				});
+				res.on('end', function() {
+					_sources[index].streams=parseM3U(m3uString);
+					_count++;
+					if (_count==_numSources) return callback(_sources);
+				});
+			}).on('error', function(e) {
+				_err='m3u download failed. reason: '+JSON.stringify(e);
+				return callback({error:_err});
 			});
-			res.on('end', function() {
-				var array = m3uString.split(/[\n\r]+/);
-				array.shift();
-				for (var i=0; i < array.length; i++) {
-					_line=array[i].replace(/[\n\r\t]/g,"");
-					switch (i % 2) {
-						case 0:
-							id=_line.match(/tvg-id\="(.*?)"/i);
-							(id == null) ? id='' : id=id[1];
-							name=_line.match(/tvg-name\="(.*?)"/i);
-							(name == null) ? name=_line.substr(_line.lastIndexOf(',')+1) : name=name[1];
-							logo=_line.match(/tvg-logo\="(.*?)"/i);
-							(logo == null) ? logo='' : logo=logo[1];
-							group=_line.match(/group-title\="(.*?)"/i);
-							(group == null) ? group='' : group=group[1];
-							break;
-						case 1:
-							url=_line;
-				                        if (url.length > 0) _sources[index].streams.push({id:id,name:name,logo:logo,url:url,group:group})
-							break;
-					}
-				}
-				_count++;
-				if (_count==_numSources) return callback(_sources);
-			});
-		}).on('error', function(e) {
-			_err='m3u download failed. reason: '+JSON.stringify(e);
-			return callback({error:_err});
-		});
-		downloadM3U.end();
+			downloadM3U.end();
+		}
 	});
 }
 
@@ -321,6 +314,32 @@ function getGroups(arr) {
 		if (_groups.indexOf(val.group) == -1) { _groups.push(val.group); }
 	});
 	return _groups;
+}
+
+function parseM3U(req) {
+	var _streams = [];
+	var array = req.split(/[\n\r]+/);
+	array.shift();
+	for (var i=0; i < array.length; i++) {
+		_line=array[i].replace(/[\n\r\t]/g,"");
+		switch (i % 2) {
+			case 0:
+				id=_line.match(/tvg-id\="(.*?)"/i);
+				(id == null) ? id='' : id=id[1];
+				name=_line.match(/tvg-name\="(.*?)"/i);
+				(name == null) ? name=_line.substr(_line.lastIndexOf(',')+1) : name=name[1];
+				logo=_line.match(/tvg-logo\="(.*?)"/i);
+				(logo == null) ? logo='' : logo=logo[1];
+				group=_line.match(/group-title\="(.*?)"/i);
+				(group == null) ? group='' : group=group[1];
+				break;
+			case 1:
+				url=_line;
+		                if (url.length > 0) _streams.push({id:id,name:name,logo:logo,url:url,group:group})
+				break;
+		}
+	}
+	return _streams;
 }
 
 function printGroups() {

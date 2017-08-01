@@ -1,5 +1,5 @@
 # m3u-builder
-Customize existing m3u lists and xmltv guides that can be used with IPTV Simple Client.
+Customize existing m3u lists and xmltv guides that can be used with IPTV Simple Client or any programming guide that uses m3u and xmltv files.
 
 m3u-builder is a way to take an XMLTV file and m3u file and customize it to name the channels what you want them to be, order them how you want them displayed and remove channels that you don't want listed.
 
@@ -45,7 +45,9 @@ All customization of channels and groups are done in these files.
 
 **REQUIRED:**
 ```
-epgInput [OBJ] - URL to EPG source
+epgInput [OBJ] - EPG source. Input can be either a URL or file. If using a URL then host, port and path are required.
+
+  * file [STR]: '/FULL/PATH/TO/FILE.xml'
 
   * host [STR]: 'HOST_URL'
 
@@ -53,9 +55,12 @@ epgInput [OBJ] - URL to EPG source
 
   * path [STR]: 'HOST_PATH'
 
-  * auth (optional) [STR]: If password authentication is required for your epg then use this. example: 'username:password'
+  * auth (opt) [STR]: If password authentication is required for your epg then use this.
+                      example: 'username:password'
 
-m3uInput [OBJ] - URL to M3U source
+m3uInput [OBJ] - M3U source. Input can be either a URL or file. If using a URL then host, port and path are required.
+
+  * file [STR]: '/FULL/PATH/TO/FILE.xml'
 
   * host [STR]: 'HOST_URL'
 
@@ -67,11 +72,12 @@ m3uInput [OBJ] - URL to M3U source
 ```
 **OPTIONAL:**
 ```
-changeGroupTo [ARRAY] - Change group names. The array consists of array pairs of a current group name and what you want to replace it with. Empty group names are supported.
+changeGroupTo [ARR] - Change group names. The array consists of array pairs of a current group name and what you want to replace it with.
+                      Empty group names are supported.
+                      example: `['','LOCAL']` - Make channels with no group name part of the LOCAL group.
 
-  `['','LOCAL']` - Make channels with no group name part of the LOCAL group.
-
-includeUnmatched [OBJ] - channels and groups that don't have any EPG data that you would still like to include in the final EPG. This parameter is only used if withID is TRUE.
+includeUnmatched [OBJ] - Channels and groups that don't have any EPG data that you would still like to include in the final EPG.
+                         This parameter is only used if withID is TRUE.
 
   * groups [ARR]: group names to include
 
@@ -84,18 +90,14 @@ omitMatched [OBJ] - channels and groups which should be omitted from EPG
   * channels [ARR]: channel names to omit`
 
 replaceInName [ARR] - Alter channel names. The array consists of array pairs of matches made by regular expressions and what to replace them with.
-
- `['\\\(.*\\\)','']` - Removes anything within () along with parenthesis themselves.
-
- `['US[/CA]*: ','']` - Removes 'US:' and 'US/CA: '.
+                      example 1: `['\\\(.*\\\)','']` - Removes anything within () along with parenthesis themselves.
+                      example 2: `['US[/CA]*: ','']` - Removes 'US:' and 'US/CA: '.
 
 replaceInUrl [ARR] - This option is used to change urls in the M3U file. The array consists of array pairs of matches made by regular expressions and what to replace them with.
-
- `['http://','http://user:pass@']` - Adds user authentication to streams. This is very useful with tvheadend.
+                     example: `['http://','http://user:pass@']` - Adds user authentication to streams. This is very useful with tvheadend.
 
 withID [BOOL] - Only include channels with an ID set is set to TRUE. includeUnmatched takes precedence over this option.
-
-  Default value: FALSE
+                Default value: FALSE
 ```
 #### params.cfg API
 
@@ -111,7 +113,7 @@ groupOrder [ARR] - order in which channel groups should be displayed on EPG. All
 ```
 ## Run Instructions
 
-Assuming you've installed using NPM all that you need to run is launch either a command prompt (Windows) or terminal window (Linux) and run the following:
+Assuming you've installed m3u-builder using NPM, all that you need to do is launch either a command prompt (Windows) or terminal window (Linux) and run the following:
 
 `m3u-builder`
 
