@@ -56,7 +56,8 @@ epgInput [OBJ] - EPG source. Input can be either a URL or file. If using a URL t
   * path [STR]: 'HOST_PATH'
 
   * auth (opt) [STR]: If password authentication is required for your epg then use this.
-                      example: 'username:password'
+
+    example: 'username:password'
 
 m3uInput [OBJ] - M3U source. Input can be either a URL or file. If using a URL then host, port and path are required.
 
@@ -68,16 +69,17 @@ m3uInput [OBJ] - M3U source. Input can be either a URL or file. If using a URL t
 
   * path [STR]: 'HOST_PATH'
 
-  * auth (optional) [STR]: If password authentication is required for your m3u file then use this. example: 'username:password'
+  * auth (optional) [STR]: If password authentication is required for your m3u file then use this.
+
+    example: 'username:password'
 ```
 **OPTIONAL:**
 ```
-changeGroupTo [ARR] - Change group names. The array consists of array pairs of a current group name and what you want to replace it with.
-                      Empty group names are supported.
-                      example: `['','LOCAL']` - Make channels with no group name part of the LOCAL group.
+changeGroupTo [ARR] - Change group names. The array consists of array pairs of a current group name and what you want to replace it with. Empty group names are supported.
 
-includeUnmatched [OBJ] - Channels and groups that don't have any EPG data that you would still like to include in the final EPG.
-                         This parameter is only used if withID is TRUE.
+  example: `['','LOCAL']` - Make channels with no group name part of the LOCAL group.
+
+includeUnmatched [OBJ] - Channels and groups that don't have any EPG data that you would still like to include in the final EPG. This parameter is only used if withID is TRUE.
 
   * groups [ARR]: group names to include
 
@@ -90,14 +92,16 @@ omitMatched [OBJ] - channels and groups which should be omitted from EPG
   * channels [ARR]: channel names to omit`
 
 replaceInName [ARR] - Alter channel names. The array consists of array pairs of matches made by regular expressions and what to replace them with.
-                      example 1: `['\\\(.*\\\)','']` - Removes anything within () along with parenthesis themselves.
-                      example 2: `['US[/CA]*: ','']` - Removes 'US:' and 'US/CA: '.
+
+  example 1: `['\\\(.*\\\)','']` - Removes anything within () along with parenthesis themselves.
+
+  example 2: `['US[/CA]*: ','']` - Removes 'US:' and 'US/CA: '.
 
 replaceInUrl [ARR] - This option is used to change urls in the M3U file. The array consists of array pairs of matches made by regular expressions and what to replace them with.
-                     example: `['http://','http://user:pass@']` - Adds user authentication to streams. This is very useful with tvheadend.
 
-withID [BOOL] - Only include channels with an ID set is set to TRUE. includeUnmatched takes precedence over this option.
-                Default value: FALSE
+  example: `['http://','http://user:pass@']` - Adds user authentication to streams. This is very useful with tvheadend.
+
+withID [BOOL] - Only include channels with an ID set is set to TRUE. includeUnmatched takes precedence over this option. Default value: FALSE
 ```
 #### params.cfg API
 
