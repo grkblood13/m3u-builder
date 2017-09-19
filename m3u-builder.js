@@ -158,6 +158,39 @@ function buildM3uFile(streams, callback) {
 	});
 	streams = sortedStreams.concat(sortGroupsThenNames(streams));
 
+	// setPosition
+	if (params.setPosition.constructor === Array) {
+		// [name,position,group]
+		positions = params.setPosition.filter(function(res) {
+			return res.length == 3;
+		});
+
+		positions.forEach(function(val) {
+			idx = streams.findIndex(function(elm) { return elm.orig === val[0]; })
+			if (idx > -1) {
+				moveEntry = streams.splice(idx,1);
+				idx = streams.findIndex(function(elm) { return elm.group === val[2]; })
+				if (idx > -1) {
+					idx = idx+val[1]-1;
+					streams.splice(idx,0,moveEntry[0]);
+				}
+			}
+		});
+
+		// [name,position]
+		positions = params.setPosition.filter(function(res) {
+			return res.length == 2 && parseInt(res[1],10);
+		});
+
+		positions.forEach(function(val) {
+			idx = streams.findIndex(function(elm) { return elm.orig === val[0]; })
+			if (idx > -1) {
+				moveEntry = streams.splice(idx,1);
+				streams.splice(val[1]-1,0,moveEntry[0]);
+			}
+		});
+	}
+
 	// write new m3u file
         m3ufile = fs.createWriteStream(params.m3uOutput);
 	m3ufile.once('open', function(fd) {
@@ -198,7 +231,7 @@ function buildStreams(sourceId,sourceStreams,_params) {
 				// change url string
 				_params.replaceInUrl.forEach(function(pair) { val.url = replaceVal(val.url,pair[0],pair[1]).trim(); })
 
-				_streams.push({'id':_id,'name':val.name,'logo':val.logo,'url':val.url,'group':val.group});
+				_streams.push({'id':_id,'orig':val.orig,'name':val.name,'logo':val.logo,'url':val.url,'group':val.group});
 			}
 		}
 	});
@@ -335,7 +368,7 @@ function parseM3U(req) {
 				break;
 			case 1:
 				url=_line;
-		                if (url.length > 0) _streams.push({id:id,name:name,logo:logo,url:url,group:group})
+		                if (url.length > 0) _streams.push({id:id,orig:name,name:name,logo:logo,url:url,group:group})
 				break;
 		}
 	}

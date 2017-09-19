@@ -1,3 +1,6 @@
+v1.4.0
+- added setPosition to allow absolute or relative positioning of channels.
+
 v1.3.1
 - Added static file support for M3U and EPG file inputs.
 

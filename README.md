@@ -55,7 +55,7 @@ epgInput [OBJ] - EPG source. Input can be either a URL or file. If using a URL t
 
   * path [STR]: 'HOST_PATH'
 
-  * auth (opt) [STR]: If password authentication is required for your epg then use this.
+  * auth (optional) [STR]: If password authentication is required for your epg then use this.
 
     example: 'username:password'
 
@@ -75,7 +75,7 @@ m3uInput [OBJ] - M3U source. Input can be either a URL or file. If using a URL t
 ```
 **OPTIONAL:**
 ```
-changeGroupTo [ARR] - Change group names. The array consists of array pairs of a current group name and what you want to replace it with. Empty group names are supported.
+changeGroupTo [MARR] - Change group names. The array consists of array pairs of a current group name and what you want to replace it with. Empty group names are supported.
 
   example: `['','LOCAL']` - Make channels with no group name part of the LOCAL group.
 
@@ -91,13 +91,13 @@ omitMatched [OBJ] - channels and groups which should be omitted from EPG
 
   * channels [ARR]: channel names to omit`
 
-replaceInName [ARR] - Alter channel names. The array consists of array pairs of matches made by regular expressions and what to replace them with.
+replaceInName [MARR] - Alter channel names. The array consists of array pairs of matches made by regular expressions and what to replace them with.
 
   example 1: `['\\\(.*\\\)','']` - Removes anything within () along with parenthesis themselves.
 
   example 2: `['US[/CA]*: ','']` - Removes 'US:' and 'US/CA: '.
 
-replaceInUrl [ARR] - This option is used to change urls in the M3U file. The array consists of array pairs of matches made by regular expressions and what to replace them with.
+replaceInUrl [MARR] - This option is used to change urls in the M3U file. The array consists of array pairs of matches made by regular expressions and what to replace them with.
 
   example: `['http://','http://user:pass@']` - Adds user authentication to streams. This is very useful with tvheadend.
 
@@ -113,7 +113,23 @@ m3uOutput [STR] - Path to output M3U file
 ```
 **OPTIONAL:**
 ```
-groupOrder [ARR] - order in which channel groups should be displayed on EPG. All remaining groups will be but in alphabetical order.
+groupOrder [ARR] - Order in which channel groups should be displayed on EPG. All remaining groups will be but in alphabetical order.
+
+	* syntax: [ 'CHANNEL_A', 'CHANNEL_B', ... ]
+
+setPosition [MARR] - Position channel(s) relatively based off of placement within group or absolutely based on overall number.
+
+	Arrays consist of two required fields (channel name and position) and a third optional field to specify a group.
+
+	If there is no group specified in the third field the channel will be placed at whatever position specified from the beginning of the channel list.
+
+	If there is a channel group specified then the channel will be placed at the specified position with that group of channels.
+
+	* syntax: [ ['CHANNEL_A',1,'LOCAL'], ['CHANNEL_B',1,'LOCAL'], ... ]
+
+	example 1: `['CHANNEL_N',1]` - Make CHANNEL_N the very first channel listed in your guide.
+
+	example 2: `['CHANNEL_N',1,'LOCAL']` - Make CHANNEL_N the first channel listed within the LOCAL group.
 ```
 ## Run Instructions
 
