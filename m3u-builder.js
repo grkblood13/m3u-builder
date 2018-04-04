@@ -1,10 +1,21 @@
 #!/usr/bin/env node
 
+Array.prototype.clean = function(deleteValue) {
+	for (var i = 0; i < this.length; i++) {
+		if (this[i] == deleteValue) {         
+			this.splice(i, 1);
+			i--;
+		}
+	}
+	return this;
+};
+
 var fs		= require('fs');
-var http	= require('http');
 var resolve	= require('path').resolve;
+var zlib	= require('zlib');
 var argv	= require(__dirname+'/node_modules/minimist')(process.argv.slice(2));
 var connect	= require(__dirname+'/node_modules/connect');
+var http	= require(__dirname+'/node_modules/follow-redirects').http;
 var merge	= require(__dirname+'/node_modules/merge');
 var serveStatic	= require(__dirname+'/node_modules/serve-static');
 var xml2js	= require(__dirname+'/node_modules/xml2js');
@@ -257,6 +268,40 @@ function compareNames(a,b) {
 	return true;
 }
 
+function download(idx, url, callback) {
+	var buffer = [];
+	http.get(url, function(res) {
+  		var contentType = res.headers['content-type'];
+
+		if (contentType == 'application/x-gzip') {
+			var gunzip = zlib.createGunzip();            
+			res.pipe(gunzip);
+
+			gunzip.on('data', function(data) {
+				buffer.push(data.toString())
+
+			}).on("end", function() {
+				return callback({index: idx, result: buffer.join("")}); 
+
+			}).on("error", function(e) {
+				return callback({error: JSON.stringify(e)});
+			});
+		} else {
+			res.on('data', function(data) {
+				buffer.push(data.toString())
+
+			}).on("end", function() {
+				return callback({index: idx, result: buffer.join("")}); 
+
+			}).on("error", function(e) {
+				return callback({error: JSON.stringify(e)});
+			});
+		}
+	}).on('error', function(e) {
+		return callback({error: JSON.stringify(e)});
+	});
+}
+
 function fetchSources(req, callback) {
 	_count=0;
 	_numSources=0;
@@ -294,23 +339,11 @@ function fetchSources(req, callback) {
 			_count++;
 			if (_count==_numSources) return callback(_sources);
 		} else {
-			var downloadEPG = http.request(sourceObj.params.epgInput, function(res) {
-				_host=this._header.match(/Host\:(.*)/i)[1].trim().split(':');
-				index = _sources.map(function (_ob) { return (_ob.params.epgInput.host===_host[0] && _ob.params.epgInput.port===parseInt(_host[1])); }).indexOf(true);
-
-				res.setEncoding('utf8');
-				res.on('data', function (chunk) {
-					_sources[index].epg+=chunk;
-				});
-				res.on('end', function() {
-					_count++;
-					if (_count==_numSources) return callback(_sources);
-				});
-			}).on('error', function(e) {
-				_err='epg download failed. reason: '+JSON.stringify(e);
-				return callback({error:_err});
+    			download(idx, sourceObj.params.epgInput, function(res) {
+				_sources[res.index].epg=res.result;
+				_count++;
+				if (_count==_numSources) return callback(_sources);
 			});
-			downloadEPG.end();
 		}
 
 		if (sourceObj.params.m3uInput.file.length > 0) {
@@ -318,25 +351,11 @@ function fetchSources(req, callback) {
 			_count++;
 			if (_count==_numSources) return callback(_sources);
 		} else {
-			var downloadM3U = http.request(sourceObj.params.m3uInput, function(res) {
-				_host = this._header.match(/Host\:(.*)/i)[1].trim().split(':');
-				index = _sources.map(function (_ob) { return (_ob.params.m3uInput.host===_host[0] && _ob.params.m3uInput.port===parseInt(_host[1])); }).indexOf(true);
-
-				var m3uString = '';
-				res.setEncoding('utf8');
-				res.on('data', function (chunk) {
-					m3uString+=chunk;
-				});
-				res.on('end', function() {
-					_sources[index].streams=parseM3U(m3uString);
-					_count++;
-					if (_count==_numSources) return callback(_sources);
-				});
-			}).on('error', function(e) {
-				_err='m3u download failed. reason: '+JSON.stringify(e);
-				return callback({error:_err});
+    			download(idx, sourceObj.params.m3uInput, function(res) {
+				_sources[res.index].streams=parseM3U(res.result);
+				_count++;
+				if (_count==_numSources) return callback(_sources);
 			});
-			downloadM3U.end();
 		}
 	});
 }
@@ -488,7 +507,14 @@ function runBuilder(callback) {
 
 			_streams = _streams.concat(buildStreams(sourceObj.id,sourceObj.streams,sourceObj.params));
 
-			sourceObj.epg=sourceObj.epg.replace(/<tv /,'<tv generator-info-id="'+sourceObj.id+'" ');
+			sourceObj.epg=sourceObj.epg.split(/[\r\n]+/).clean('');
+
+			if (sourceObj.epg[1].substr(0,3) == "<tv") {
+				sourceObj.epg.splice(1, 0, "<!DOCTYPE tv SYSTEM \"xmltv.dtd\">");
+			}
+
+			sourceObj.epg[2] = sourceObj.epg[2].replace(/<tv/,'<tv generator-info-id="'+sourceObj.id+'"');
+			sourceObj.epg = sourceObj.epg.join('\n');
 
 			parser.parseString(sourceObj.epg, function (err, result) {
 				if (err != null || checkNested(result,'tv','$','generator-info-id') == false) {

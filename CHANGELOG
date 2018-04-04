@@ -1,5 +1,16 @@
+v1.5.0
+- Added support for xtreme-codes
+
+  * URL redirect support
+
+  * gzip support
+
+  * malformed EPG data support (added DOCTYPE if not present)
+
+- Cleaned up code
+
 v1.4.0
-- added setPosition to allow absolute or relative positioning of channels.
+- Added setPosition to allow absolute or relative positioning of channels.
 
 v1.3.1
 - Added static file support for M3U and EPG file inputs.
