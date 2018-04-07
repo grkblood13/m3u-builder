@@ -514,11 +514,6 @@ function runBuilder(callback) {
 		}
 	}
 
-	function invalidEPG(_id) {
-		console.log('invalid xmltv file. skipping '+_id+' entry.');
-		return;
-	}
-
 	fetchSources(sourceDir, function(_sources) {
 		if (_sources.hasOwnProperty('error')) {
 			console.log(_sources.error);
@@ -531,7 +526,6 @@ function runBuilder(callback) {
 
 			sourceObj.epg=sourceObj.epg.split(/[\r\n]+/).clean('');
 
-			//if (sourceObj.epg.length <= 2) invalidEPG(sourceObj.id);
 			if (sourceObj.epg.length <= 2) {
 				console.log('invalid xmltv file. skipping '+sourceObj.id+' entry.');
 				return;

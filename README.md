@@ -91,7 +91,7 @@ includeUnmatched [OBJ] - Channels and groups that don't have any EPG data that y
 
   * channels [ARR]: channel names to include
 
-omitMatched [OBJ] - channels and groups which should be omitted from EPG. entries will be interpretted as regex strings.
+omitMatched [OBJ] - channels and groups which should be omitted from EPG. Entries will be interpretted as regex strings.
 
   * groups [ARR]: group names to omit
 
