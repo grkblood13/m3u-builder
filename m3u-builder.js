@@ -24,7 +24,7 @@ var builder	= new xml2js.Builder();
 var params;
 
 function main() {
-	_itv=0;
+	var _itv=0;
 
 	sourceCfg=__dirname+'/params.cfg';
 	['c','cfg'].forEach(function(val) {
@@ -144,6 +144,13 @@ function dynamicSortMultiple() {
     }
 }
 
+function multiMatch(_arr,_val) {
+	var _res = _arr.filter(function(res) {
+		return _val.match(new RegExp(res,'i'));
+	});
+	return _res;
+}
+
 function replaceVal(name,match,replacement) {
         return name.replace(new RegExp(match,'i'),replacement);
 }
@@ -203,7 +210,7 @@ function buildM3uFile(streams, callback) {
 	}
 
 	// write new m3u file
-        m3ufile = fs.createWriteStream(params.m3uOutput);
+	m3ufile = fs.createWriteStream(params.m3uOutput);
 	m3ufile.once('open', function(fd) {
 		m3ufile.write("#EXTM3U\n");
 		streams.forEach(function(val,idx) {
@@ -219,8 +226,9 @@ function buildM3uFile(streams, callback) {
 
 function buildStreams(sourceId,sourceStreams,_params) {
 	_streams = [];
+
         sourceStreams.forEach(function(val,idx) {
-		_remove=0;
+		var _remove=0;
 		if (val.id.length == 0 && _params.withID == true) {
 			// remove streams with no ID, unless included in 'includeUnmatched'
 			if (!(_params.includeUnmatched.groups.indexOf(val.group) > -1 || _params.includeUnmatched.channels.indexOf(val.name) > -1)) _remove=1;
@@ -230,18 +238,23 @@ function buildStreams(sourceId,sourceStreams,_params) {
 			// change group name
  			index = _params.changeGroupTo.map(function(x) { return x[0] }).indexOf(val.group);
 			if (index > -1) val.group = _params.changeGroupTo[index][1];
+			
 			// only keep wanted channels/groups
-		        if (!(_params.omitMatched.groups.indexOf(val.group) > -1 || _params.omitMatched.channels.indexOf(val.name) > -1)) {
+			if (multiMatch(_params.omitMatched.groups,val.group) == 0 && multiMatch(_params.omitMatched.channels,val.name) == 0) {
 
 				// change channel name
-				_params.replaceInName.forEach(function(pair) { val.name = replaceVal(val.name,pair[0],pair[1]).trim(); })
-
-				// add unique identifier to id
-				if (val.id.length > 0) { _id=sourceId+'-'+val.id  } else { _id=''; }
+				if (_params.replaceInName.length > 0) {
+					_params.replaceInName.forEach(function(pair) { val.name = replaceVal(val.name,pair[0],pair[1]).trim(); })
+				}
 
 				// change url string
-				_params.replaceInUrl.forEach(function(pair) { val.url = replaceVal(val.url,pair[0],pair[1]).trim(); })
+				if (_params.replaceInUrl.length > 0) {
+					_params.replaceInUrl.forEach(function(pair) { val.url = replaceVal(val.url,pair[0],pair[1]).trim(); })
+				}
 
+				// add unique identifier to id
+				(val.id.length > 0) ? _id=sourceId+'-'+val.id : _id='';
+				
 				_streams.push({'id':_id,'orig':val.orig,'name':val.name,'logo':val.logo,'url':val.url,'group':val.group});
 			}
 		}
@@ -303,9 +316,9 @@ function download(idx, url, callback) {
 }
 
 function fetchSources(req, callback) {
-	_count=0;
-	_numSources=0;
-	_sources=[];
+	var _count=0;
+	var _numSources=0;
+	var _sources=[];
 	fs.readdirSync(req).forEach(function(file,idx) {
 		if (file.substr(0,1) != '.') {
 			_id=file.substr(0,file.lastIndexOf('.'));
@@ -340,6 +353,10 @@ function fetchSources(req, callback) {
 			if (_count==_numSources) return callback(_sources);
 		} else {
     			download(idx, sourceObj.params.epgInput, function(res) {
+				if (res.error) {
+					console.error(res.error);
+					process.exit();
+				}
 				_sources[res.index].epg=res.result;
 				_count++;
 				if (_count==_numSources) return callback(_sources);
@@ -361,7 +378,7 @@ function fetchSources(req, callback) {
 }
 
 function getGroups(arr) {
-	_groups = [];
+	var _groups = [];
 	arr.forEach(function(val) {
 		if (_groups.indexOf(val.group) == -1) { _groups.push(val.group); }
 	});
@@ -457,7 +474,7 @@ function printHelp() {
 }
 
 function printInfo() {
-	_objElms = ['id','name','logo','url','group'];
+	var _objElms = ['id','name','logo','url','group'];
 	fetchSources(sourceDir, function(_sources) {
 		if (_sources.hasOwnProperty('error')) {
 			console.log(_sources.error);
@@ -486,7 +503,7 @@ function printInfo() {
 }
 
 function runBuilder(callback) {
-	_epgObj = {
+	var _epgObj = {
 		tv: { 
 			'$': {
 				'generator-info-name':	'M3UBUILDER',
@@ -497,17 +514,28 @@ function runBuilder(callback) {
 		}
 	}
 
+	function invalidEPG(_id) {
+		console.log('invalid xmltv file. skipping '+_id+' entry.');
+		return;
+	}
+
 	fetchSources(sourceDir, function(_sources) {
 		if (_sources.hasOwnProperty('error')) {
 			console.log(_sources.error);
 			return;
 		}
-		_streams = [];
+		var _streams = [];
 		_sources.forEach(function(sourceObj) {
 
 			_streams = _streams.concat(buildStreams(sourceObj.id,sourceObj.streams,sourceObj.params));
 
 			sourceObj.epg=sourceObj.epg.split(/[\r\n]+/).clean('');
+
+			//if (sourceObj.epg.length <= 2) invalidEPG(sourceObj.id);
+			if (sourceObj.epg.length <= 2) {
+				console.log('invalid xmltv file. skipping '+sourceObj.id+' entry.');
+				return;
+			}
 
 			if (sourceObj.epg[1].substr(0,3) == "<tv") {
 				sourceObj.epg.splice(1, 0, "<!DOCTYPE tv SYSTEM \"xmltv.dtd\">");
@@ -518,9 +546,10 @@ function runBuilder(callback) {
 
 			parser.parseString(sourceObj.epg, function (err, result) {
 				if (err != null || checkNested(result,'tv','$','generator-info-id') == false) {
-					console.log('invalid xmltv file. skipping entry.');
+					console.log('invalid xmltv file. skipping '+sourceObj.id+' entry.');
 					return;
 				}
+
 				key=result.tv.$['generator-info-id'];
 				result.tv.channel.forEach(function(channel,idx) {
 					// prepend identifier to channel data
@@ -560,8 +589,8 @@ function runBuilder(callback) {
 }
 
 function sortGroupsThenNames(arr) {
-	_groups=getGroups(arr).sort();
-	_output = [];
+	var _groups=getGroups(arr).sort();
+	var _output = [];
 	_groups.forEach(function(val) {
 		_match=arr.filter(function(ob) { return ob.group == val; });
 		_match.sort(compareNames);
