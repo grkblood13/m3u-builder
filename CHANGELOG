@@ -1,3 +1,8 @@
+v1.5.1
+- Fixed bugs.
+
+- Changed omitMatched to be regex-based instead of string-based.
+
 v1.5.0
 - Added support for xtreme-codes
 

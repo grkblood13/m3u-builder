@@ -5,6 +5,12 @@ m3u-builder is a way to take an XMLTV file and m3u file and customize it to name
 
 m3u-builder requires Node.js and will run on either Windows or Linux.
 
+NOTE: Some provides have ridiculously large EPG files. If they're around the 200MB range you'll probably need to increase the amount of memory nodejs can use.
+
+To do this, launch m3u-builder like so:
+
+`node --max-old-space-size=3000 /usr/local/lib/node_modules/m3u-builder/m3u-builder.js`
+
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine. 
@@ -85,11 +91,11 @@ includeUnmatched [OBJ] - Channels and groups that don't have any EPG data that y
 
   * channels [ARR]: channel names to include
 
-omitMatched [OBJ] - channels and groups which should be omitted from EPG
+omitMatched [OBJ] - channels and groups which should be omitted from EPG. Entries will be interpretted as regex strings.
 
-  * groups [ARR]: group names to omit`
+  * groups [ARR]: group names to omit
 
-  * channels [ARR]: channel names to omit`
+  * channels [ARR]: channel names to omit
 
 replaceInName [MARR] - Alter channel names. The array consists of array pairs of matches made by regular expressions and what to replace them with.
 
