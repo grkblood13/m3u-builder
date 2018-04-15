@@ -1,3 +1,6 @@
+v1.5.2
+- Added main.js, which kicks off m3u-builder in a spawned process with increased ram.
+
 v1.5.1
 - Fixed bugs.
 
