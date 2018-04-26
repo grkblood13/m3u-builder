@@ -1,3 +1,8 @@
+v1.5.3
+- Made m3u-builder skip to next entry instead of exiting if download failed.
+
+- Added ability to unzip local file.
+
 v1.5.2
 - Added main.js, which kicks off m3u-builder in a spawned process with increased ram.
 

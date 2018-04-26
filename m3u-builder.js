@@ -152,7 +152,7 @@ function multiMatch(_arr,_val) {
 }
 
 function replaceVal(name,match,replacement) {
-        return name.replace(new RegExp(match,'i'),replacement);
+	return name.replace(new RegExp(match,'i'),replacement);
 }
 
 // application functions
@@ -348,16 +348,21 @@ function fetchSources(req, callback) {
 		_sources[idx].streams = [];
 
 		if (sourceObj.params.epgInput.file.length > 0) {
-			_sources[idx].epg=fs.readFileSync(sourceObj.params.epgInput.file, {encoding:'utf8'});
-			_count++;
-			if (_count==_numSources) return callback(_sources);
+			var _out = sourceObj.params.epgInput.file;			
+			if (_out.indexOf('.gz') > 0) {
+				unzipFile(idx, _out, function(res) {
+					_sources[res.index].epg=res.result;
+					_count++;
+					if (_count==_numSources) return callback(_sources);											
+				});
+			} else {
+				_sources[idx].epg=fs.readFileSync(_out, {encoding:'utf8'});
+				_count++;
+				if (_count==_numSources) return callback(_sources);
+			}			
 		} else {
-    			download(idx, sourceObj.params.epgInput, function(res) {
-				if (res.error) {
-					console.error(res.error);
-					process.exit();
-				}
-				_sources[res.index].epg=res.result;
+    		download(idx, sourceObj.params.epgInput, function(res) {
+				(res.error) ? console.error(res.error) : _sources[res.index].epg=res.result;
 				_count++;
 				if (_count==_numSources) return callback(_sources);
 			});
@@ -368,8 +373,8 @@ function fetchSources(req, callback) {
 			_count++;
 			if (_count==_numSources) return callback(_sources);
 		} else {
-    			download(idx, sourceObj.params.m3uInput, function(res) {
-				_sources[res.index].streams=parseM3U(res.result);
+    		download(idx, sourceObj.params.m3uInput, function(res) {
+				(res.error) ? console.error(res.error) : _sources[res.index].streams=parseM3U(res.result);
 				_count++;
 				if (_count==_numSources) return callback(_sources);
 			});
@@ -591,6 +596,12 @@ function sortGroupsThenNames(arr) {
 		_output = _output.concat(_match);
 	});
 	return _output;
+}
+
+function unzipFile(_idx,_file,_cb) {				
+	zlib.unzip(fs.readFileSync(_file), function(err,res) {
+		return _cb({index:_idx,result:res.toString()});
+	});
 }
 
 main();
