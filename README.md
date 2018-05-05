@@ -43,7 +43,7 @@ All customization of channels and groups are done in these files.
 
 #### sources/SOURCE.cfg API
 
-**REQUIRED:**
+**REQUIRED FIELDS:**
 ```
 epgInput [OBJ] - EPG source. Input can be either a URL or file. If using a URL then host, port and path are required.
 
@@ -73,11 +73,11 @@ m3uInput [OBJ] - M3U source. Input can be either a URL or file. If using a URL t
 
     example: 'username:password'
 ```
-**OPTIONAL:**
+**OPTIONAL FIELDS:**
 ```
-changeGroupTo [MARR] - Change group names. The array consists of array pairs of a current group name and what you want to replace it with. Empty group names are supported.
+changeGroupOfChannel [MARR] -  Change group of channel based on regular expressions. First field of array is the regular expression for the channel name and the second field is the group to change to.
 
-  example: `['','LOCAL']` - Make channels with no group name part of the LOCAL group.
+  example: `['NICK','KIDS'],['TOON','KIDS'],['DISNEY','KIDS']` - Make any channels with NICK, TOON or DISNEY in their name a member of the KIDS group.
 
 includeUnmatched [OBJ] - Channels and groups that don't have any EPG data that you would still like to include in the final EPG. This parameter is only used if withID is TRUE.
 
@@ -91,6 +91,10 @@ omitMatched [OBJ] - channels and groups which should be omitted from EPG. Entrie
 
   * channels [ARR]: channel names to omit
 
+renameGroup [MARR] - Renames groups. The array consists of array pairs of a current group name and what you want to replace it with. Empty group names are supported.
+
+  example: `['','LOCAL']` - Make channels with no group name part of the LOCAL group.
+  
 replaceInName [MARR] - Alter channel names. The array consists of array pairs of matches made by regular expressions and what to replace them with.
 
   example 1: `['\\\(.*\\\)','']` - Removes anything within () along with parenthesis themselves.
@@ -113,6 +117,8 @@ m3uOutput [STR] - Path to output M3U file
 ```
 **OPTIONAL:**
 ```
+allCaps [BOOL] - Make channel names all uppercase. Default value: FALSE
+
 groupOrder [ARR] - Order in which channel groups should be displayed on EPG. All remaining groups will be but in alphabetical order.
 
 	* syntax: [ 'CHANNEL_A', 'CHANNEL_B', ... ]

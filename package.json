@@ -1,6 +1,6 @@
 {
     "name": "m3u-builder",
-    "version": "1.5.3-rc.1",
+    "version": "1.6.0",
     "bin": {
         "m3u-builder": "./main.js"
     },
@@ -10,7 +10,7 @@
         "xmltv",
         "kodi",
         "iptv",
-	"xtreme editor"
+        "xtream editor"
     ],
     "repository": "https://github.com/grkblood13/m3u-builder.git",
     "author": "grkblood13 <grkblood13@hotmail.com>",

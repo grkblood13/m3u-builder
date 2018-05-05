@@ -17,6 +17,7 @@ var argv	= require(__dirname+'/node_modules/minimist')(process.argv.slice(2));
 var connect	= require(__dirname+'/node_modules/connect');
 var http	= require(__dirname+'/node_modules/follow-redirects').http;
 var merge	= require(__dirname+'/node_modules/merge');
+var pd		= require(__dirname+'/node_modules/pretty-data').pd;
 var serveStatic	= require(__dirname+'/node_modules/serve-static');
 var xml2js	= require(__dirname+'/node_modules/xml2js');
 var parser	= new xml2js.Parser();
@@ -214,7 +215,8 @@ function buildM3uFile(streams, callback) {
 	m3ufile.once('open', function(fd) {
 		m3ufile.write("#EXTM3U\n");
 		streams.forEach(function(val,idx) {
-                        m3ufile.write('#EXTINF:-1, tvg-id="'+val.id+'" tvg-name="'+val.name+'" tvg-logo="'+val.logo+'" group-title="'+val.group+'", '+val.name+'\n');
+			(params.allCaps == true) ? _name = val.name.toUpperCase() : _name = val.name;
+                        m3ufile.write('#EXTINF:-1, tvg-id="'+val.id+'" tvg-name="'+_name+'" tvg-logo="'+val.logo+'" group-title="'+val.group+'", '+_name+'\n');
 			m3ufile.write(val.url+'\n');
 		})
 		m3ufile.end();
@@ -226,8 +228,7 @@ function buildM3uFile(streams, callback) {
 
 function buildStreams(sourceId,sourceStreams,_params) {
 	_streams = [];
-
-        sourceStreams.forEach(function(val,idx) {
+	sourceStreams.forEach(function(val,idx) {
 		var _remove=0;
 		if (val.id.length == 0 && _params.withID == true) {
 			// remove streams with no ID, unless included in 'includeUnmatched'
@@ -235,9 +236,15 @@ function buildStreams(sourceId,sourceStreams,_params) {
 		}
 
 		if (_remove==0) {
-			// change group name
- 			index = _params.changeGroupTo.map(function(x) { return x[0] }).indexOf(val.group);
-			if (index > -1) val.group = _params.changeGroupTo[index][1];
+			// rename group
+ 			var index = _params.renameGroup.map(function(x) { return x[0] }).indexOf(val.group);
+			if (index > -1) val.group = _params.renameGroup[index][1];
+
+			// change group
+ 			var _match = _params.changeGroupOfChannel.filter(function(fres,fidx) {
+				return val.name.match(new RegExp(fres[0],'i'));
+			});
+			if (_match.length > 0) val.group = _match[0][1];
 			
 			// only keep wanted channels/groups
 			if (multiMatch(_params.omitMatched.groups,val.group) == 0 && multiMatch(_params.omitMatched.channels,val.name) == 0) {
@@ -328,9 +335,10 @@ function fetchSources(req, callback) {
 					epgInput: { host:'', port:'', path:'', auth:'', file:'' },
 					m3uInput: { host:'', port:'', path:'', auth:'', file:'' },
 					addAuthToStreams: '',
+					changeGroupOfChannel: [],
 					replaceInName: [],
 					replaceInUrl: [],
-					changeGroupTo: [],
+					renameGroup: [],
 					omitMatched: { groups: [], channels: [] },
 					includeUnmatched: { groups: [], channels: [] },
 					withID: false
@@ -351,18 +359,19 @@ function fetchSources(req, callback) {
 			var _out = sourceObj.params.epgInput.file;			
 			if (_out.indexOf('.gz') > 0) {
 				unzipFile(idx, _out, function(res) {
-					_sources[res.index].epg=res.result;
+					//_sources[res.index].epg=res.result;
+					_sources[res.index].epg=pd.xml(res.result);
 					_count++;
-					if (_count==_numSources) return callback(_sources);											
+					if (_count==_numSources) return callback(_sources);
 				});
 			} else {
-				_sources[idx].epg=fs.readFileSync(_out, {encoding:'utf8'});
+				_sources[idx].epg=pd.xml(fs.readFileSync(_out, {encoding:'utf8'}));
 				_count++;
 				if (_count==_numSources) return callback(_sources);
 			}			
 		} else {
-    		download(idx, sourceObj.params.epgInput, function(res) {
-				(res.error) ? console.error(res.error) : _sources[res.index].epg=res.result;
+    			download(idx, sourceObj.params.epgInput, function(res) {
+				(res.error) ? console.error(res.error) : _sources[res.index].epg=pd.xml(res.result);
 				_count++;
 				if (_count==_numSources) return callback(_sources);
 			});
@@ -373,7 +382,7 @@ function fetchSources(req, callback) {
 			_count++;
 			if (_count==_numSources) return callback(_sources);
 		} else {
-    		download(idx, sourceObj.params.m3uInput, function(res) {
+    			download(idx, sourceObj.params.m3uInput, function(res) {
 				(res.error) ? console.error(res.error) : _sources[res.index].streams=parseM3U(res.result);
 				_count++;
 				if (_count==_numSources) return callback(_sources);

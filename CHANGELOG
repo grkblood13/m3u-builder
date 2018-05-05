@@ -1,3 +1,12 @@
+v1.6.0
+- Changed changeGroupTo option to renameGroup
+
+- Added changeGroupOfChannel: allows user to change group of channel based on regular expressions.
+
+- Added allCaps to params.js: gives user the ability to make all channel names uppercase.
+
+- Fixed bug with improperly handling epg files with no line breaks.
+
 v1.5.3
 - Made m3u-builder skip to next entry instead of exiting if download failed.
 
@@ -12,7 +21,7 @@ v1.5.1
 - Changed omitMatched to be regex-based instead of string-based.
 
 v1.5.0
-- Added support for xtreme-codes
+- Added support for xtream-codes
 
   * URL redirect support
 
