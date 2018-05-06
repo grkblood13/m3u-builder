@@ -75,9 +75,11 @@ m3uInput [OBJ] - M3U source. Input can be either a URL or file. If using a URL t
 ```
 **OPTIONAL FIELDS:**
 ```
-changeGroupOfChannel [MARR] -  Change group of channel based on regular expressions. First field of array is the regular expression for the channel name and the second field is the group to change to.
+changeGroupOfChannel [OBJ] -  Change group of channel based on regular expressions. First field of array is the regular expression for the channel name and the second field is the group to change to.
 
-  example: `['NICK','KIDS'],['TOON','KIDS'],['DISNEY','KIDS']` - Make any channels with NICK, TOON or DISNEY in their name a member of the KIDS group.
+  * syntax: changeGroupOfChannel = { 'GROUP_NAME_1': ['CHAN_1','CHAN_2'], 'GROUP_NAME_2': ['CHAN_3'], ... }
+
+  example: `{'KIDS': ['NICK','TOON','DISNEY']}` - Make any channels with NICK, TOON or DISNEY in their name a member of the KIDS group.
 
 includeUnmatched [OBJ] - Channels and groups that don't have any EPG data that you would still like to include in the final EPG. This parameter is only used if withID is TRUE.
 

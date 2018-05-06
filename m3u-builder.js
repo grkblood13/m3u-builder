@@ -241,11 +241,16 @@ function buildStreams(sourceId,sourceStreams,_params) {
 			if (index > -1) val.group = _params.renameGroup[index][1];
 
 			// change group
- 			var _match = _params.changeGroupOfChannel.filter(function(fres,fidx) {
-				return val.name.match(new RegExp(fres[0],'i'));
-			});
-			if (_match.length > 0) val.group = _match[0][1];
-			
+ 			for (var key in _params.changeGroupOfChannel) {
+				var _regs = _params.changeGroupOfChannel[key];
+				for (var i=0; i < _regs.length; i++) {
+					if (val.name.match(new RegExp(_regs[i],'i'))) {
+						val.group = key;
+						break;
+					}
+				}
+			}
+
 			// only keep wanted channels/groups
 			if (multiMatch(_params.omitMatched.groups,val.group) == 0 && multiMatch(_params.omitMatched.channels,val.name) == 0) {
 
