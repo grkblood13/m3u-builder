@@ -1,3 +1,6 @@
+v1.6.2
+- Fixed bug with changeGroupOfChannel
+
 v1.6.1
 - Altered structure of changeGroupOfChannel
 

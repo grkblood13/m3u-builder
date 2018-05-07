@@ -340,7 +340,7 @@ function fetchSources(req, callback) {
 					epgInput: { host:'', port:'', path:'', auth:'', file:'' },
 					m3uInput: { host:'', port:'', path:'', auth:'', file:'' },
 					addAuthToStreams: '',
-					changeGroupOfChannel: [],
+					changeGroupOfChannel: {},
 					replaceInName: [],
 					replaceInUrl: [],
 					renameGroup: [],
