@@ -1,3 +1,6 @@
+v.1.6.3
+- Made changeGroupOfChannel run before renameGroup
+
 v1.6.2
 - Fixed bug with changeGroupOfChannel
 
