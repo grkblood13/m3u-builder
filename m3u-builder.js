@@ -236,10 +236,6 @@ function buildStreams(sourceId,sourceStreams,_params) {
 		}
 
 		if (_remove==0) {
-			// rename group
- 			var index = _params.renameGroup.map(function(x) { return x[0] }).indexOf(val.group);
-			if (index > -1) val.group = _params.renameGroup[index][1];
-
 			// change group
  			for (var key in _params.changeGroupOfChannel) {
 				var _regs = _params.changeGroupOfChannel[key];
@@ -250,6 +246,10 @@ function buildStreams(sourceId,sourceStreams,_params) {
 					}
 				}
 			}
+
+			// rename group
+ 			var index = _params.renameGroup.map(function(x) { return x[0] }).indexOf(val.group);
+			if (index > -1) val.group = _params.renameGroup[index][1];
 
 			// only keep wanted channels/groups
 			if (multiMatch(_params.omitMatched.groups,val.group) == 0 && multiMatch(_params.omitMatched.channels,val.name) == 0) {
