@@ -1,6 +1,6 @@
 {
     "name": "m3u-builder",
-    "version": "1.6.3",
+    "version": "2.0.0",
     "bin": {
         "m3u-builder": "./main.js"
     },
