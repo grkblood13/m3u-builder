@@ -1,4 +1,9 @@
-v.1.6.3
+v2.0.0
+- Altered epgInput and m3uInput to only have two options: url and file.
+
+- Added https support.
+
+v1.6.3
 - Made changeGroupOfChannel run before renameGroup
 
 v1.6.2

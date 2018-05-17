@@ -45,33 +45,17 @@ All customization of channels and groups are done in these files.
 
 **REQUIRED FIELDS:**
 ```
-epgInput [OBJ] - EPG source. Input can be either a URL or file. If using a URL then host, port and path are required.
+epgInput [OBJ] - EPG source. Input can be either a URL or file.
 
   * file [STR]: '/FULL/PATH/TO/FILE.xml'
 
-  * host [STR]: 'HOST_URL'
+  * url [STR]: 'http://HOST_URL/xmltv.php'
 
-  * port [NUM]: HOST_PORT
-
-  * path [STR]: 'HOST_PATH'
-
-  * auth (optional) [STR]: If password authentication is required for your epg then use this.
-
-    example: 'username:password'
-
-m3uInput [OBJ] - M3U source. Input can be either a URL or file. If using a URL then host, port and path are required.
+m3uInput [OBJ] - M3U source. Input can be either a URL or file.
 
   * file [STR]: '/FULL/PATH/TO/FILE.xml'
 
-  * host [STR]: 'HOST_URL'
-
-  * port [NUM]: HOST_PORT
-
-  * path [STR]: 'HOST_PATH'
-
-  * auth (optional) [STR]: If password authentication is required for your m3u file then use this.
-
-    example: 'username:password'
+  * url [STR]: 'http://HOST_URL/playlist/channels.m3u?profile=pass'
 ```
 **OPTIONAL FIELDS:**
 ```
