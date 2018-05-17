@@ -12,10 +12,12 @@ Array.prototype.clean = function(deleteValue) {
 
 var fs		= require('fs');
 var resolve	= require('path').resolve;
+var URL		= require('url');
 var zlib	= require('zlib');
 var argv	= require(__dirname+'/node_modules/minimist')(process.argv.slice(2));
 var connect	= require(__dirname+'/node_modules/connect');
 var http	= require(__dirname+'/node_modules/follow-redirects').http;
+var https	= require(__dirname+'/node_modules/follow-redirects').https;
 var merge	= require(__dirname+'/node_modules/merge');
 var pd		= require(__dirname+'/node_modules/pretty-data').pd;
 var serveStatic	= require(__dirname+'/node_modules/serve-static');
@@ -72,7 +74,6 @@ function main() {
 				console.log('exiting now.');
 				process.exit(1);
 			});
-
 		}
 	
 		if (argv.n >= 0) _interval=argv.n;
@@ -164,9 +165,7 @@ function buildM3uFile(streams, callback) {
 	params.groupOrder.forEach(function(group) {
 		streamGroup = [];
 		streams.forEach(function(ob) {
-	        	if (ob.group === group)  {
-	                	streamGroup.push(ob);
-	        	}
+			if (ob.group === group) streamGroup.push(ob);
 		});
 		sortedStreams = sortedStreams.concat(streamGroup.sort(compareNames));				
 	});
@@ -227,7 +226,7 @@ function buildM3uFile(streams, callback) {
 }
 
 function buildStreams(sourceId,sourceStreams,_params) {
-	_streams = [];
+	var _streams = [];
 	sourceStreams.forEach(function(val,idx) {
 		var _remove=0;
 		if (val.id.length == 0 && _params.withID == true) {
@@ -295,36 +294,45 @@ function compareNames(a,b) {
 
 function download(idx, url, callback) {
 	var buffer = [];
-	http.get(url, function(res) {
-  		var contentType = res.headers['content-type'];
-
+	if (!url.match(/^http/)) url='http://'+url;
+	url=URL.parse(url);
+	
+	function _handleData(_data) {
+		var contentType = _data.headers['content-type'];
 		if (contentType == 'application/x-gzip') {
 			var gunzip = zlib.createGunzip();            
-			res.pipe(gunzip);
-
+			_data.pipe(gunzip);
 			gunzip.on('data', function(data) {
 				buffer.push(data.toString())
-
 			}).on("end", function() {
 				return callback({index: idx, result: buffer.join("")}); 
-
 			}).on("error", function(e) {
 				return callback({error: JSON.stringify(e)});
 			});
 		} else {
-			res.on('data', function(data) {
+			_data.on('data', function(data) {
 				buffer.push(data.toString())
-
 			}).on("end", function() {
 				return callback({index: idx, result: buffer.join("")}); 
-
 			}).on("error", function(e) {
 				return callback({error: JSON.stringify(e)});
 			});
-		}
-	}).on('error', function(e) {
-		return callback({error: JSON.stringify(e)});
-	});
+		}		
+	}
+	
+	if (url.protocol == 'https:') {			
+		https.get(url, function(res) {
+			_handleData(res);
+		}).on('error', function(e) {
+			return callback({error: JSON.stringify(e)});
+		});
+	} else {
+		http.get(url, function(res) {
+			_handleData(res);
+		}).on('error', function(e) {
+			return callback({error: JSON.stringify(e)});
+		});
+	}
 }
 
 function fetchSources(req, callback) {
@@ -333,12 +341,12 @@ function fetchSources(req, callback) {
 	var _sources=[];
 	fs.readdirSync(req).forEach(function(file,idx) {
 		if (file.substr(0,1) != '.') {
-			_id=file.substr(0,file.lastIndexOf('.'));
+			var _id=file.substr(0,file.lastIndexOf('.'));
 			_sources[idx] = {
 				id: _id,
 				params: {
-					epgInput: { host:'', port:'', path:'', auth:'', file:'' },
-					m3uInput: { host:'', port:'', path:'', auth:'', file:'' },
+					epgInput: { url:'', file:'' },
+					m3uInput: { url:'', file:'' },
 					addAuthToStreams: '',
 					changeGroupOfChannel: {},
 					replaceInName: [],
@@ -364,7 +372,6 @@ function fetchSources(req, callback) {
 			var _out = sourceObj.params.epgInput.file;			
 			if (_out.indexOf('.gz') > 0) {
 				unzipFile(idx, _out, function(res) {
-					//_sources[res.index].epg=res.result;
 					_sources[res.index].epg=pd.xml(res.result);
 					_count++;
 					if (_count==_numSources) return callback(_sources);
@@ -375,7 +382,7 @@ function fetchSources(req, callback) {
 				if (_count==_numSources) return callback(_sources);
 			}			
 		} else {
-    			download(idx, sourceObj.params.epgInput, function(res) {
+    			download(idx, sourceObj.params.epgInput.url, function(res) {
 				(res.error) ? console.error(res.error) : _sources[res.index].epg=pd.xml(res.result);
 				_count++;
 				if (_count==_numSources) return callback(_sources);
@@ -387,7 +394,7 @@ function fetchSources(req, callback) {
 			_count++;
 			if (_count==_numSources) return callback(_sources);
 		} else {
-    			download(idx, sourceObj.params.m3uInput, function(res) {
+    			download(idx, sourceObj.params.m3uInput.url, function(res) {
 				(res.error) ? console.error(res.error) : _sources[res.index].streams=parseM3U(res.result);
 				_count++;
 				if (_count==_numSources) return callback(_sources);
@@ -399,7 +406,7 @@ function fetchSources(req, callback) {
 function getGroups(arr) {
 	var _groups = [];
 	arr.forEach(function(val) {
-		if (_groups.indexOf(val.group) == -1) { _groups.push(val.group); }
+		if (_groups.indexOf(val.group) == -1) _groups.push(val.group);
 	});
 	return _groups;
 }
@@ -423,7 +430,7 @@ function parseM3U(req) {
 				break;
 			case 1:
 				url=_line;
-		                if (url.length > 0) _streams.push({id:id,orig:name,name:name,logo:logo,url:url,group:group})
+				if (url.length > 0) _streams.push({id:id,orig:name,name:name,logo:logo,url:url,group:group})
 				break;
 		}
 	}
@@ -500,21 +507,20 @@ function printInfo() {
 			return;
 		}
 		if (argv.info.length > 0) {
-
 			(typeof argv.output == 'string') ? _out=argv.output.split(',') : _out=_objElms;
 			(typeof argv.o == 'string') ? _out=argv.o.split(',') : _out=_objElms;
 
-		        index = _sources.map(function (_ob) { return _ob.id }).indexOf(argv.info);
-		        if (index > -1) {
+			var index = _sources.map(function (_ob) { return _ob.id }).indexOf(argv.info);
+			if (index > -1) {
 				(_objElms.indexOf(argv['sort-by']) > -1) ? _sort=argv['sort-by'] : _sort='name';
-		                _sources[index].streams.sort(dynamicSort(_sort)).forEach(function(ob) {
+				_sources[index].streams.sort(dynamicSort(_sort)).forEach(function(ob) {
 					if (argv['with-id'] == true && ob.id.length == 0) return;
 					for (var key in ob) {		
-		                        	if (ob[key].length == 0 || _out.indexOf(key) == -1) delete ob[key]
+						if (ob[key].length == 0 || _out.indexOf(key) == -1) delete ob[key]
 					}			
-		                        console.log(JSON.stringify(ob));
-		                });
-		        }
+					console.log(JSON.stringify(ob));
+				});
+			}
 		} else {
 			console.log('source not specified.');
 		}
@@ -528,7 +534,7 @@ function runBuilder(callback) {
 				'generator-info-name':	'M3UBUILDER',
 				'generator-info-url':	'http://www.github.com/grkblood13/m3u-builder'
 			},
-	     		channel: [],
+	     	channel: [],
 			programme: []
 		}
 	}
