@@ -1,3 +1,6 @@
+v2.1.0
+- Added removeWhitespace option to params.cfg
+
 v2.0.0
 - Altered epgInput and m3uInput to only have two options: url and file.
 
