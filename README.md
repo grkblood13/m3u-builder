@@ -108,6 +108,8 @@ allCaps [BOOL] - Make channel names all uppercase. Default value: FALSE
 groupOrder [ARR] - Order in which channel groups should be displayed on EPG. All remaining groups will be but in alphabetical order.
 
 	* syntax: [ 'CHANNEL_A', 'CHANNEL_B', ... ]
+	
+removeWhitespace [BOOL] - Removes all white space from channel names. Default value: FALSE
 
 setPosition [MARR] - Position channel(s) relatively based off of placement within group or absolutely based on overall number.
 

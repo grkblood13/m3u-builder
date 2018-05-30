@@ -215,7 +215,8 @@ function buildM3uFile(streams, callback) {
 		m3ufile.write("#EXTM3U\n");
 		streams.forEach(function(val,idx) {
 			(params.allCaps == true) ? _name = val.name.toUpperCase() : _name = val.name;
-                        m3ufile.write('#EXTINF:-1, tvg-id="'+val.id+'" tvg-name="'+_name+'" tvg-logo="'+val.logo+'" group-title="'+val.group+'", '+_name+'\n');
+			(params.removeWhitespace == true) ? _name = val.name.replace(/\s/g,'') : _name = val.name;
+			m3ufile.write('#EXTINF:-1, tvg-id="'+val.id+'" tvg-name="'+_name+'" tvg-logo="'+val.logo+'" group-title="'+val.group+'", '+_name+'\n');
 			m3ufile.write(val.url+'\n');
 		})
 		m3ufile.end();
@@ -229,8 +230,8 @@ function buildStreams(sourceId,sourceStreams,_params) {
 	var _streams = [];
 	sourceStreams.forEach(function(val,idx) {
 		var _remove=0;
+		// remove streams with no ID, unless included in 'includeUnmatched'
 		if (val.id.length == 0 && _params.withID == true) {
-			// remove streams with no ID, unless included in 'includeUnmatched'
 			if (!(_params.includeUnmatched.groups.indexOf(val.group) > -1 || _params.includeUnmatched.channels.indexOf(val.name) > -1)) _remove=1;
 		}
 
