@@ -91,6 +91,10 @@ replaceInUrl [MARR] - This option is used to change urls in the M3U file. The ar
 
   example: `['http://','http://user:pass@']` - Adds user authentication to streams. This is very useful with tvheadend.
 
+setChanNum [MARR] - Set EXTINF channel number. The array consists of array pairs. Each pair should have the original channel name and the channel number.
+
+  example: [['CHANNEL_1',1],['CHANNEL_2',2]]
+
 withID [BOOL] - Only include channels with an ID set is set to TRUE. includeUnmatched takes precedence over this option. Default value: FALSE
 ```
 #### params.cfg API

@@ -216,7 +216,8 @@ function buildM3uFile(streams, callback) {
 		streams.forEach(function(val,idx) {
 			(params.allCaps == true) ? _name = val.name.toUpperCase() : _name = val.name;
 			(params.removeWhitespace == true) ? _name = val.name.replace(/\s/g,'') : _name = val.name;
-			m3ufile.write('#EXTINF:-1, tvg-id="'+val.id+'" tvg-name="'+_name+'" tvg-logo="'+val.logo+'" group-title="'+val.group+'", '+_name+'\n');
+			//m3ufile.write('#EXTINF:-1, tvg-id="'+val.id+'" tvg-name="'+_name+'" tvg-logo="'+val.logo+'" group-title="'+val.group+'", '+_name+'\n');
+			m3ufile.write('#EXTINF:'+val.num+', tvg-id="'+val.id+'" tvg-name="'+_name+'" tvg-logo="'+val.logo+'" group-title="'+val.group+'", '+_name+'\n');
 			m3ufile.write(val.url+'\n');
 		})
 		m3ufile.end();
@@ -254,6 +255,14 @@ function buildStreams(sourceId,sourceStreams,_params) {
 			// only keep wanted channels/groups
 			if (multiMatch(_params.omitMatched.groups,val.group) == 0 && multiMatch(_params.omitMatched.channels,val.name) == 0) {
 
+				// set channel number
+				if (_params.setChanNum.length > 0) {
+					_params.setChanNum.forEach(function(pair) { 
+						if (val.name == pair[0]) val.num = pair[1];
+					});
+				}
+				if (typeof val.num == 'undefined') val.num = -1;
+				
 				// change channel name
 				if (_params.replaceInName.length > 0) {
 					_params.replaceInName.forEach(function(pair) { val.name = replaceVal(val.name,pair[0],pair[1]).trim(); })
@@ -267,7 +276,7 @@ function buildStreams(sourceId,sourceStreams,_params) {
 				// add unique identifier to id
 				(val.id.length > 0) ? _id=sourceId+'-'+val.id : _id='';
 				
-				_streams.push({'id':_id,'orig':val.orig,'name':val.name,'logo':val.logo,'url':val.url,'group':val.group});
+				_streams.push({'id':_id,'num':val.num,'orig':val.orig,'name':val.name,'logo':val.logo,'url':val.url,'group':val.group});
 			}
 		}
 	});
@@ -353,6 +362,7 @@ function fetchSources(req, callback) {
 					replaceInName: [],
 					replaceInUrl: [],
 					renameGroup: [],
+					setChanNum: [],
 					omitMatched: { groups: [], channels: [] },
 					includeUnmatched: { groups: [], channels: [] },
 					withID: false

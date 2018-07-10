@@ -1,5 +1,8 @@
+v2.2.0
+- Added setChanNum: allows user to set EXTINF based off of original channel name.
+
 v2.1.0
-- Added removeWhitespace option to params.cfg
+- Added removeWhitespace option to params.cfg.
 
 v2.0.0
 - Altered epgInput and m3uInput to only have two options: url and file.
@@ -30,7 +33,7 @@ v1.5.3
 - Added ability to unzip local file.
 
 v1.5.2
-- Added main.js, which kicks off m3u-builder in a spawned process with increased ram.
+- Added main.js, which kicks off m3u-builder in a spawned process with increased RAM.
 
 v1.5.1
 - Fixed bugs.
